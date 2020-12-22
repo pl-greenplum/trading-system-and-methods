@@ -1,0 +1,11 @@
+[LegacyColorValue = true]; 
+
+{ TSM Volume Momentum : Volume Momentum Indicator as a Percentage
+  Copyright 1998-1999, PJ Kaufman. All rights reserved
+  Creates a n-period momentum from volume  } 
+
+  inputs: n(20);
+  vars: TSMVM(0);
+
+  TSMVM = TSMVolumeMomentum(n); 
+  plot1(TSMVM,"TSMVM");

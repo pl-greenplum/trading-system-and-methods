@@ -1,0 +1,48 @@
+[LegacyColorValue = true]; 
+
+{ TSM Moving Average stop loss with var size
+  Copyright 2011 P J Kaufman. All rights reserved. }
+
+{ period = length of calculaton
+}
+  input: period(80), stopper(252), stopfactor(12), sizeper(20);
+  vars:	signal(0), trend(0), printPL(true), size(1), investment(25000), 
+  			atrange(0), stoprange(0), highprice(0), lowprice(0), change(0);
+  			
+	if sizeper <> 0 then atrange = avgtruerange(sizeper);
+	if atrange = 0 or sizeper = 0 then 
+			size = 1
+		else
+			size = investment/(atrange*bigpointvalue); 
+			
+  	trend = average(close,period);
+  	if signal <> 1 and trend[1] < trend[2] and trend > trend[1] then begin
+  			buy to cover all contracts this bar on close;
+  			buy size contracts this bar on close;
+  			highprice = close;
+  			signal = 1;
+  			end;
+  	if signal <> -1 and trend[1] > trend[2] and trend < trend[1] then begin
+  			sell all contracts this bar on close;
+  			sell short size contracts this bar on close;
+  			lowprice = close;
+  			signal = -1;
+  		end;
+  		
+	if marketposition > 0 then highprice = maxlist(highprice,close)
+		else if marketposition < 0 then lowprice = minlist(lowprice,close);
+  		
+{ stop-loss}
+	if stopper <> 0 and stopfactor <> 0 then begin
+		change = close - close[1];
+		stoprange = stddev(change,stopper);
+		if marketposition > 0 then sell ("stop_long") all contracts next bar at highprice - stopfactor*stoprange stop
+			else if marketposition < 0 then buy to cover  ("stop_short") all contracts  
+					next bar at lowprice + stopfactor*stoprange stop;
+		end;	
+  		
+  	If printPL then begin
+  		If Currentbar = 1 then print(file("c:\TSM5\MA_stops_PL_varsize.csv"), "Date,size,netPL");
+  		print(file("c:\TSM5\MA_stops_PL_varsize.csv"),date:8:0, ",", size:8:3, ",", 
+  						netprofit + openpositionprofit:5:5);
+		end;

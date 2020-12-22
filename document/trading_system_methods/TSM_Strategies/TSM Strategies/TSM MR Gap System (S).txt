@@ -1,0 +1,16 @@
+{SYSTEM: TSM MR Gap System }
+{ Copyright 2011. PJ Kaufman. All rights reserved. }
+
+		
+	Inputs:	gap(0.01);
+	
+	Sell short 1 share next bar at close*(1 + gap) limit;
+	Buy 1 share next bar at close*(1 - gap) limit;
+
+	If Marketposition > 0 then
+			Sell all shares this bar on close
+		Else if Marketposition < 0 then
+			Buy to cover all shares this bar on close;
+	
+ 	If Currentbar = 1 then print(file("c:\TSM5\MR_Gap_PL.csv"), "Date,netPL");
+  	print(file("c:\TSM5\MR_Gap_PL.csv"),date:8:0, ",", netprofit:5:5);

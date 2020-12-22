@@ -1,0 +1,14 @@
+{ TSM Momentum Pinball
+	from Raschke and Conners, "Street Smarts"
+	Copyright 2003, 2011, P.J.Kaufman. All rights reserved. }
+	
+	vars:	tRSI(0), change(0);
+	
+	
+	change = close - close[1];
+	tRSI = RSI(change,3);
+	
+	plot1(tRSI,"MomPinball");
+	
+	
+	

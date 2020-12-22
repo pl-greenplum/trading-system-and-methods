@@ -1,0 +1,178 @@
+[LegacyColorValue = true]; 
+
+   { TSM 2-Systems : 2-Systems combined
+     Copyright 1994-1999,2012 P. J. Kaufman.  All rights reserved. }
+
+{	This program combine 2 popular trading systems and nets signals.
+	It produces equity streams and performance in the file 
+	"c:\TSM5\TSM2sys.txt" and is intended to provide an example
+	of how to calculate, combine, and compare trading results
+
+	System choices are:
+	1 = Moving average
+	2 = Exponential smoothing
+	3 = Linear Regression slope
+	4 = N-day breakout 
+	Where it applies, signals are taken from the direction of the trendline 
+	and not the penetration of price through the trendline. }
+
+   Inputs: systype1(1), period1(20), systype2(4), period2(20);
+   vars:   equity(0), sd(0), n(0), PL(0), ratio(0), eqchg(0), teqchg(0), 
+            peak(0), draw(0), maxdraw(0),
+            signal(0), enter(0), openeq(0), closedeq(0), comm(100),
+            signal1(0), enter1(0), sd1(0), PL1(0), ratio1(0), equity1(0),
+            eqchg1(0), teqchg1(0), peak1(0), draw1(0), maxdraw1(0),
+            openeq1(0), closedeq1(0),
+            signal2(0), enter2(0), sd2(0), PL2(0), ratio2(0), equity2(0),
+            eqchg2(0), teqchg2(0), peak2(0), draw2(0), maxdraw2(0),
+            openeq2(0), closedeq2(0), lowdraw(0), lowdev(0),
+            chgdraw(0), chgsd(0), nt1(0), npt1(0), nt2(0), npt2(0), nt(0), npt(0),
+            tpl(0), tpt1(0), tpt2(0), tpt(0), samedays(0), same(0);
+
+   { Systems are always in the market }
+     n = n + 1;
+   { SYSTEM 1 }
+     if systype1=1 then signal1 = TSMMAsignal(period1,0,0);
+     if systype1=2 then signal1 = TSMEXPsignal(close,period1,0,0);
+     if systype1=3 then signal1 = TSMLRSsignal(period1,0,0);
+     if systype1=4 then signal1 = TSMNDBsignal(high,low,close,period1);
+
+{ System 1 is always in the market }
+     if (signal1[1] <> 1 and signal1=1) or (signal1[1] <> -1 and signal1=-1) then begin
+         tpl =  signal1[1]*(close - enter1)*bigpointvalue - commission;
+         closedeq1 = closedeq1[1] + tpl;
+         if tpl > 0 then npt1 = npt1 + 1;
+         nt1 = nt1 + 1;
+         enter1 = close;
+         end;
+{ System 1 equity }
+     openeq1 = 0;
+     if signal1<> 0 then begin
+         openeq1 = signal1*(close - enter1)*bigpointvalue;
+         tpt1 = npt1;
+         if openeq1 > 0 then tpt1 = tpt1 + 1;
+         end;
+     equity1 = closedeq1 + openeq1;
+     eqchg1 = equity1 - equity1[1];
+     teqchg1 = teqchg1 + Power(eqchg1,2);
+     if n > 0 then sd1 = SquareRoot(teqchg1 / n);
+  { System 1 drawdown }
+    if equity1 > peak1 then peak1 = equity1;
+    draw1 = peak1 - equity1;
+    if draw1 > maxdraw1 then maxdraw1 = draw1;
+    PL1 = 100.;
+    if maxdraw1 > 0 then PL1 = equity1*100 / maxdraw1;
+    ratio1 = 1.00;
+    if sd1<>0 then ratio1 = equity1 / sd1;
+
+   { SYSTEM 2 }
+     if systype2=1 then signal2 = TSMMAsignal(period2,0,0);
+     if systype2=2 then signal2 = TSMEXPsignal(close,period2,0,0);
+     if systype2=3 then signal2 = TSMLRSsignal(period2,0,0);
+     if systype2=4 then signal2 = TSMNDBsignal(high,low,close,period2);
+
+ { System 2 is always in the market }
+     if (signal2[1] <> 1 and signal2=1) or (signal2[1] <> -1 and signal2=-1) then begin
+         tpl = signal2[1]*(close - enter2)*bigpointvalue - commission;
+         closedeq2 = closedeq2[1] + tpl;
+         if tpl > 0 then npt2 = npt2 + 1;
+         nt2 = nt2 + 1;
+         enter2 = close;
+         end;
+{ System 2 equity }
+     openeq2 = 0;
+     if signal2 <> 0 then begin
+         openeq2 = signal2*(close - enter2)*bigpointvalue;
+         tpt2 = npt2;
+         if openeq2 > 0 then tpt2 = tpt2 + 1;
+         end;
+     equity2 = closedeq2 + openeq2;
+     eqchg2 = equity2 - equity2[1];
+     teqchg2 = teqchg2 + Power(eqchg2,2);
+     if n > 0 then sd2 = SquareRoot(teqchg2 / n);
+  { System 2 drawdown }
+    if equity2 > peak2 then peak2 = equity2;
+    draw2 = peak2 - equity2;
+    if draw2 > maxdraw2 then maxdraw2 = draw2;
+    PL2 = 100.;
+    if maxdraw2 > 0 then PL2 = equity2*100 / maxdraw2;
+    ratio2 = 1.00;
+    if sd2<>0 then ratio2 = equity2 / sd2;
+
+{ COMBINED SIGNALS AND PERFORMANCE }
+     if signal[1] <> 0 and signal1 <> signal2 then begin
+         tpl =  signal[1]*(close - enter)*bigpointvalue - commission;
+         closedeq = closedeq[1] + tpl;
+         if tpl > 0 then npt = npt + 1;
+         Sell This Bar  on close;
+         Buy to Cover This Bar  on close;
+         signal = 0;
+         end;
+     if signal[1] <> 1 and signal1=1 and signal2=1 then begin
+         if signal[1] = -1 then begin
+            tpl = signal[1]*(close - enter)*bigpointvalue - commission;
+            closedeq = closedeq[1] + tpl ;
+            if tpl > 0 then npt = npt + 1;
+            end;
+         Buy This Bar  on close;
+         nt = nt + 1;
+         enter = close;
+         signal = 1;
+         end;
+     if signal[1] <> -1 and signal1=-1 and signal2=-1 then begin
+         if signal[1] = 1 then begin
+            tpl =  (close - enter)*bigpointvalue - commission;
+            closedeq = closedeq[1] + tpl;
+            if tpl > 0 then npt = npt + 1;
+            end;
+         Sell Short This Bar  on close;
+         enter = close;
+         nt = nt + 1;
+         signal = -1;
+         end;
+
+{    equity = (NetProfit + OpenPositionProfit);  }
+
+     openeq = 0;
+     if signal<>0 then begin
+         samedays = samedays[1] + 1;
+         openeq = signal*(close - enter)*bigpointvalue;
+         tpt = npt;
+         if openeq > 0 then tpt = tpt + 1;
+         end;
+     equity = closedeq + openeq;
+     eqchg = equity - equity[1];
+     teqchg = teqchg + Power(eqchg,2);
+     if n > 0 then sd = SquareRoot(teqchg / n);
+
+  { DRAWDOWN }
+    if equity > peak then peak = equity;
+    draw = peak - equity;
+    if draw > maxdraw then maxdraw = draw;
+    PL = 100.;
+    if maxdraw > 0 then PL = equity*100 / maxdraw;
+    ratio = 1.00;
+    if sd<>0 then ratio = equity / sd;
+
+{ PERFORMANCE COMPARISON }
+{ Improvement in drawdown }
+    lowdraw = maxdraw1;
+    if maxdraw2 < maxdraw1 then lowdraw = maxdraw2;
+    chgdraw = 0;
+    if lowdraw <> 0 then chgdraw = (lowdraw - maxdraw)*100 / lowdraw; 
+{ Improvement in standard deviation }
+    lowdev = sd1;
+    if sd2 < sd1 then lowdev = sd2;
+    chgsd = 0;
+    if lowdev <> 0 then chgsd = (lowdev - sd)*100 / lowdev; 
+{  Percentage same days }
+    if currentbar > 0 then same = samedays*100 / currentbar;
+
+    print (file("c:\TSM5\TSM2sys.txt"), "Sys1", tpt1:4:0, nt1:4:0, equity1:6:0,
+		sd1:5:0, maxdraw1:8:0, PL1:8:0, ratio1:6:1);
+    print (file("c:\TSM5\TSM2sys.txt"), "Sys2",tpt2:4:0, nt2:4:0, equity2:6:0,
+		sd2:5:0, maxdraw2:8:0, PL2:8:0, ratio2:6:1);
+    print (file("c:\TSM5\TSM2sys.txt"), "Both", tpt:4:0, nt:4:0, equity:6:0,
+		sd:5:0, maxdraw:8:0, PL:8:0, ratio:6:1);
+    print (file("c:\TSM5\TSM2sys.txt"), " %chg", chgdraw:4:0, chgsd:4:1,
+		" %same", same:4:1);

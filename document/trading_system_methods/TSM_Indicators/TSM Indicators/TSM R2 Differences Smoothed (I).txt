@@ -1,0 +1,13 @@
+{ TSM R2 Differences Smoothed
+	Copyright 2012, P.J.Kaufman. All rights reserved. }
+
+inputs:	period(20);
+vars:		R2(0), R2S(0), seq(0), diff(0);
+
+seq = currentbar;
+diff = Close - close[1];
+R2 = Correlation(diff,seq,period);
+R2S = average(R2,period/2.);
+
+plot1(R2,"R2diff");
+plot2(R2S,"R2smoothed");

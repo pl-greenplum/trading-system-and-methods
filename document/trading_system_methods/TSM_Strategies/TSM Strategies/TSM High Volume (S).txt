@@ -1,0 +1,72 @@
+[LegacyColorValue = true]; 
+
+{ TSM High Volume
+   Do not enter trades on high volume and price in trend direction.
+   Exit on high volume and price in profitable direction.
+   Copyright 1994-1999, P. J. Kaufman.  All rights reserved.
+
+   Option 0 = No entry or exit filter
+   Option 1 = Entry filter only
+   Option 2 = Exit filter only
+   Option 3 = Both entry and exit filters }
+
+  input:  rule(3), length(70), factor(1.0);
+  vars:   vavg(0), vsd(0), uplimit(0), mavg(0),aror(0),
+           deltapl(0), totalpl(0), risk(0), ratio(0), adjvol(0), 
+           variance(0), savevol(0);
+
+{ Find average volume, replacing bad values }
+  adjvol = volume;
+  if volume<>0 then savevol = volume;
+  if volume=0 then adjvol = savevol;
+{ Replace high volume days because they distort standard deviation }
+  if adjvol>vavg+2*factor*vsd then adjvol = savevol;
+  vavg = average(adjvol,length);
+  vsd = stddev(adjvol,length);
+
+{ Extreme volume limit }
+   uplimit = vavg + 2*factor*vsd;
+
+{ System rules based on moving average trend }
+   mavg = average(close,length/2);
+
+{ Only enter on new trend signals without high volume }
+   if rule=0 or rule=2 then begin
+      if mavg>mavg[1] and marketposition <> 1 then begin
+         Buy This Bar  on close;
+         end;
+      if mavg<mavg[1] and marketposition <> -1 then begin
+         Sell Short This Bar  on close;
+         end;
+      end;
+
+{ Don't reenter after high volume exit }
+   if rule=1 or rule=3 then begin
+      if mavg>mavg[1] and volume<uplimit and marketposition <>1  then begin
+         Buy This Bar  on close;
+         end;
+      if mavg<mavg[1] and volume<uplimit and marketposition <> -1  then begin
+         Sell Short This Bar  on close;
+         end;
+      end;
+
+{ Exit on profitable high volume }
+   if rule=0 or rule=1 then begin
+      if mavg<mavg[1] then Sell This Bar  on close;
+      if mavg>mavg[1] then Buy to Cover This Bar  on close;
+      end;
+   if rule=2 or rule=3 then begin
+      if  mavg<mavg[1] or (close>close[1] and volume>uplimit)  then Sell This Bar  on close;
+      if  mavg>mavg[1] or (close<close[1] and volume>uplimit)  then Buy to Cover This Bar  on close;
+      end;
+
+{ Calculate return/risk ratio }
+   totalpl = (NetProfit + PositionProfit)/10000.;
+   deltapl = totalpl - totalpl[1];
+   variance = variance[1] + deltapl*deltapl;
+   risk = SquareRoot(variance)/currentbar;
+   aror = totalpl*250./currentbar;
+   ratio = ratio[1];
+   if risk<>0 then ratio = aror/risk;
+   if lastbaronchart then print("Date=",date:6:0, "  TPL=",totalpl:8:0, "  n=", currentbar:5:0,
+              "  AROR=", aror:6:2, "  Risk=", risk:8:2, "  RR=",ratio:6:3);

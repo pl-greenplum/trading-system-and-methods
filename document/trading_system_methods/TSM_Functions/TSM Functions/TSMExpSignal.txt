@@ -1,0 +1,23 @@
+[LegacyColorValue = true]; 
+
+{ TSMExpSignal : Exponential smoothing signal function
+  Copyright 1994-1998, P J Kaufman.  All rights reserved. }
+
+{ price = input series
+  period = length of exponential trend
+  filter = whole percent trend change to give signal
+  lag = 0 to enter on close, n to enter n-days later
+}
+  input: price(numericseries), period(numericsimple), filter(numeric),
+         lag(numericsimple);
+  vars:  exp(0), change(0), signal(0);
+
+  signal = signal[1];
+{ Exponential smoothing for testing anticipation }
+  Exp = SmoothedAverage(price,period);
+  change = (exp - exp[1])*100 / price[1];
+{ long signal }
+  if lag >= 0 and change[lag] > filter then signal = 1;
+{ short signal }
+  if lag >= 0 and change[lag] <- filter then signal = -1;
+  TSMEXPsignal = signal;

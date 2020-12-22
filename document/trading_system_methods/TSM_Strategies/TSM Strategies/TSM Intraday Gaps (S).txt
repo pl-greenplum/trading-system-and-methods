@@ -1,0 +1,82 @@
+{ TSM Intraday Gaps
+	Copyright 2011, P.J.Kaufman. All rights reserved }
+	
+{	entrytype	0= trade as a runaway gap
+					1= trade retracement to high-low as a reversal
+					2= trade retracement to close as a reversal 
+	exittype		0= exit on close of same day
+					1= exit on open of next day }
+	
+	inputs:	entrytype(0), exittype(0);	
+	vars: 	todayopen(0), todayhigh(0), todaylow(0), todaylapse(0), todayupgap(0),
+				todaydowngap(0), phigh(0), plow(0), pclose(0), ATR(0);
+	
+{ Identify new day and gap }
+	if date <> date[1] then begin
+			phigh = todayhigh;
+			plow = todaylow;
+			pclose = close[1];
+			todayopen = open;
+			todayhigh = high;
+			todaylow = low;
+			todaylapse = open - pclose;
+			todayupgap = open - phigh;
+			todaydowngap = plow - open;
+			ATR = avgtruerange(50);
+			end
+{ not a new day }			
+		else begin
+			todayhigh = maxlist(todayhigh,high);
+			todaylow = minlist(todaylow,low);
+		end;
+		
+{ if gap open up }
+	if todayupgap > 0 then begin
+{ runaway gap up }
+		if entrytype = 0 then begin
+				buy ("B1") this bar on close;
+				end
+{ pullback to prior high }				
+			else if entrytype = 1 then begin
+				sell short ("S2") next bar at phigh stop;
+				end
+{ pullback to prior close }				
+			else if entrytype = 2 then begin
+				sell short ("S3") next bar at pclose stop;
+			end;
+		end;
+			
+	if todaydowngap > 0 then begin
+{ runaway gap down }
+		if entrytype = 0 then begin
+				sell short ("S1") this bar on close;
+				end
+{ pullback to prior low }				
+			else if entrytype = 1 then begin
+				buy ("B2") next bar at plow stop;
+				end
+{ pullback to prior close }				
+			else if entrytype = 2 then begin
+				buy ("B3") next bar at pclose stop;
+			end;
+		end;
+			
+{ exit options }
+	if marketposition > 0 then begin
+		if exittype = 0 and time = sess1endtime then 
+				sell ("XL1") this bar on close
+			else if exittype = 1 and date <> date[1] then 
+				sell ("XL2") this bar on close;
+		end;
+		
+	if marketposition < 0 then begin		
+		if exittype = 0 and time = sess1endtime then 
+				buy to cover ("XS1") this bar on close
+			else if exittype = 1 and date <> date[1] then 
+				buy to cover ("XS2") this bar on close;
+		end;
+				
+		
+			
+			
+		

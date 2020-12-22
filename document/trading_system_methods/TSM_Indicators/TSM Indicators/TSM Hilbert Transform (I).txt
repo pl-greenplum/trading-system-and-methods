@@ -1,0 +1,38 @@
+[LegacyColorValue = true]; 
+
+{	Ehlers' Hilbert Transform Indicator
+	Copyright 2003, John Ehlers. All rights reserved.
+	Detrending added by P J Kaufman }
+
+	Inputs: 	price((H+L)/2), alpha(.07), detrendper(12);
+
+	Vars:		smooth(0),cycle(0),q1(0),i1(0),deltaphase(0),phasesum(0),oldphasesum(0),
+				count(0),DC(0),period(0),i2(0),q2(0),alpha1(.1),series(0);
+
+	if detrendper = 0 then
+			series = price
+		else
+			series = price - average(price,detrendper);
+
+	smooth = (series + 2*series[1] + 2*series[2] + series[3])/6;
+	cycle = (1 - .5*alpha)*(1 - .5*alpha)*(smooth - 2*smooth[1] + smooth[2])
+				+ 2*(1 - alpha)*cycle[1] - (1 - alpha)*(1 - alpha)*cycle[2];
+	if currentbar < 7 then cycle = (series - 2*series[1] + series[2])/4;
+
+	q1 = (.0962*cycle + .5769*cycle[2] - .5769*cycle[4] - .0962*cycle[6])*(.5 + .8*period[1]);
+	i1 = cycle[3];
+
+	if q1 <> 0 and q1[1] <> 0 then deltaphase = (i1/q1 - i1[1]/q1[1])/(1 + i1*i1[1]/(q1*q1[1]));
+	if deltaphase < 0 then deltaphase = deltaphase[1];
+	if deltaphase > 1.1 then deltaphase = 1.1;
+
+	phasesum = 0;
+	oldphasesum = 0;
+	for count = 0 to 40 begin
+		phasesum = oldphasesum + deltaphase;
+		if phasesum >= 6.28318 and oldphasesum < 6.28318 then dc = count + 1;
+		oldphasesum = phasesum;
+		end;
+
+	period = .2*dc + .8*period[1];
+	plot1(period,"period");

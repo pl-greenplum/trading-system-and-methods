@@ -1,0 +1,50 @@
+[LegacyColorValue = true]; 
+
+{ TSM Moving Average for stocks
+  Copyright 1994-1999,2011 P J Kaufman. All rights reserved. }
+
+{ period = length of calculaton
+  crossoption =0 using trendline, =1 use price crossing trendline
+  entrypriceoption = 0 buy/sell on current close
+  						 = 1 buy/sell on next open
+  						 = 2 buy/sell next close 
+  longonly			 true then only long positions
+}
+  input: period(40), crossoption(0), entrypriceoption(0), longonly(false);
+  vars:	signal(0), price(0), printPL(true), size(1), investment(100000), 
+  			allocation(0.05), ATRper(20), equity(0), pltoday(0);
+  			
+	if currentbar = 1 then equity = investment;
+{	size = equity*allocation/avgtruerange(ATRper);}
+	size = equity/close;
+  	signal = TSM_MAsignal(period,crossoption);
+  	If entrypriceoption = 0 then begin
+  			if signal = 1 and marketposition <> 1 then Buy size[1] contracts This Bar at close
+  			else if signal = -1 and marketposition <> -1 then begin
+  				If longonly then sell all contracts this bar on close
+  					else Sell Short size[1] contracts This Bar at close;
+  				end;
+  			end
+  		Else if Entrypriceoption = 1 then begin
+  			If signal = 1 and marketposition <> 1 then buy size[1] contracts next bar on open
+  			Else if signal = -1 and marketposition <> -1 then begin
+  				if longonly then sell all contracts this bar on close
+  					else sell short size[1] contracts next bar on open;
+  				end;
+  			end
+  		Else if Entrypriceoption = 2 then begin
+  			If signal[1] = 1 and marketposition <> 1 then buy size[1] contracts this bar at close
+  				Else if signal[1] = -1 and marketposition <> -1 then begin
+  					if longonly then sell all contracts this bar on close
+  						else sell short size[1] contracts this bar at close;
+  				end;
+  		end;
+  	
+  	PLtoday = size[1]*marketposition*(close - close[1]); 
+  	equity = equity + pltoday;
+  	
+  	If printPL then begin
+  		If Currentbar = 1 then print(file("c:\TSM5\MA PL.csv"), "Date,close,size,pos,PLtoday,equity");
+  		print(file("c:\TSM5\MA PL.csv"),date:8:0, ",", close:8:3, ",", size:8:3, ",", marketposition:3:0, ",", 
+  						PLtoday:5:5,",", equity:10:0);
+		end;

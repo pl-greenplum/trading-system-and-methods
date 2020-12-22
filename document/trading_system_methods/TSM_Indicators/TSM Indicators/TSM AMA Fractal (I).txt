@@ -1,0 +1,51 @@
+
+{ TSM AMA Fractal
+	Adapted from John Ehlers, "Fractal Adaptive Moving Averages," 
+	(Technical Analysis of Stocks & Commodities, October 2005)
+	Copyright 2011, P.J.Kaufman. All rights reserved. }
+	
+	inputs:	price((H+L)/2), n(16); {n must be an even number}
+	vars:		hh(0), ll(0), count(0), n1(0), n2(0), n3(0),
+				dimen(0), alpha(0), filt(0), halfn(0), std(0),
+				upperband(0), lowerband(0), diff(0);
+				
+	n3 = (highest(high,n) - lowest(low,n))/n;
+	hh = high;
+	ll = low;
+	halfn = intportion(0.5*n);	{in case input is an odd number}
+	
+{ scan first half of data }	
+	for count = 0 to halfn - 1 begin
+		if high[count] > hh then hh = high[count];
+		if low[count] < ll then ll = low[count];
+		end;
+		
+	n1 = (hh - ll)/halfn;
+	hh = high[halfn];
+	ll = low[halfn];
+
+{ scan second half of data }
+	for count = halfn to n-1 begin
+		if high[count] > hh then hh = high[count];
+		if low[count] < ll then ll = low[count];
+		end;
+		
+	n2 = (hh - ll)/halfn;
+	
+	if n1 > 0 and n2 > 0 and n3 > 0 then dimen = (log(n1 + n2) - log(n3))/log(2);
+	
+	alpha = expvalue(-4.6*(dimen - 1));
+	alpha = maxlist(0.01,alpha);
+	alpha = minlist(1.0,alpha);
+	
+	filt = alpha*price + (1 - alpha)*filt[1];
+	if currentbar < n + 1 then filt = price;
+	
+	diff = price - price[1];
+	std = stddev(diff,n);
+	upperband = filt + 2*std;
+	lowerband = filt - 2*std;
+	
+	plot1(filt,"AMAfractal");
+	plot2(upperband,"UB");
+	plot3(lowerband,"LB");

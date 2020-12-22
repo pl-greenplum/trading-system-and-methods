@@ -1,0 +1,110 @@
+{ TSM Intraday Shocks 
+	Copyright 2011, P.J.Kaufman. All rights reserved. }
+	
+
+   inputs:  period(100), shockfactor(2.0);
+   
+   array:   timebar[200](0), vltybar[2500](0);
+   vars:    first(true), nbar(0), ndays(0), divisor(0), todaybar(0),
+   			thisbar(0), avgvlty(0), firstdate(0), vlty(0), pvolbar(0),
+   			entrybar(0), entryhigh(0), entrylow(0), 
+   			zone(.20), delaybeforestop(2);
+
+{	If Currentbar = 1 then 
+			print (file("c:\TSM5\Intraday vlty.csv"), 
+				"Date,days,bar,time,pvlty,divisor,vlty,newavg");}
+				
+{ Test for first day, set up array }
+	If first and nbar = 0 then begin
+			nbar = 1;
+			ndays = 1;
+			timebar[1] = time;
+			vlty = truerange;
+			vltybar[1] = truerange;
+			firstdate = date;
+			todaybar = 1;
+			first = false;
+{			print (file("c:\TSM5\Intraday vlty.csv"), date:8:0, ",1,", todaybar:5:0, ",", 
+					timebar[todaybar]:5:0, ",0,1,", vlty:5:4, ",", vltybar[todaybar]:5:4);}
+			End
+		Else if Date = firstdate then begin
+			nbar = nbar + 1;
+			timebar[nbar] = time;
+			vlty = truerange;
+			vltybar[nbar] = vlty;
+			todaybar = nbar;
+{			print (file("c:\TSM5\Intraday vlty.csv"), date:8:0, ",1,", todaybar:5:0, ",", 
+					timebar[todaybar]:5:0, ",0,1,", vlty:5:4, ",", vltybar[todaybar]:5:4);}
+			End
+			
+{ accumulate vlty data in table in corresponding time slot }			
+	 	Else if date <> date[1] and date <> firstdate then begin
+{ if position still open then exit }
+			if marketposition > 0 then sell ("SellOpen") all contracts this bar on close
+				else if marketposition < 0 then buy to cover ("BuyOpen") all contracts this bar on close;	 	
+			ndays = ndays + 1;
+			todaybar = 1;
+			divisor = minlist(ndays,period);
+			vlty = truerange;
+			pvolbar = vltybar[todaybar];
+			if divisor <> 0 then vltybar[todaybar] = vltybar[todaybar] + vlty/divisor - vltybar[todaybar]/divisor;
+{			print (file("c:\TSM5\Intraday vlty.csv"), date:8:0, ",", ndays:5:0, ",", todaybar:5:0, ",", 
+				timebar[todaybar]:5:0, ",", pvolbar:5:4, ",", divisor:5:0, ",", vlty:5:4, ",", vltybar[todaybar]:5:4);}
+			end
+		Else if Date = date[1] and date <> firstdate then begin
+			todaybar = todaybar + 1;
+			divisor = minlist(ndays,period);
+			vlty = truerange;
+			pvolbar = vltybar[todaybar];
+{ histogram in n-day average of this bar }			
+			if divisor <> 0 then vltybar[todaybar] = vltybar[todaybar] + vlty/divisor - vltybar[todaybar]/divisor;
+{			print (file("c:\TSM5\Intraday vlty.csv"), date:8:0, ",", ndays:5:0, ",", todaybar:5:0, ",", 
+				timebar[todaybar]:5:0, ",", pvolbar:5:4, ",", divisor:5:0, ",", vlty:5:4, ",", vltybar[todaybar]:5:4);}
+		end;
+
+{ new signals }
+	if marketposition = 0 {and date <> firstdate} and vlty > vltybar[todaybar]*shockfactor then begin
+		if close > low + (1 - zone)*(high - low) then begin
+				sell short ("Sellhigh") 1 contract next bar on open;
+				entrybar = todaybar;
+				entryhigh = high;
+				end
+			else if close < low + zone*(high - low) then begin
+				buy ("buylow") 1 contract next bar on open;
+				entrybar = todaybar;
+				entrylow = low;
+			end;
+		end;
+		
+{ on the open }
+	if marketposition = 0 and todaybar = 1 and vlty > 3*vlty[1] then begin
+		if close > low + (1 - zone)*(high - low) then begin
+				sell short ("SellHOpen") 1 contract next bar on open;
+				entrybar = todaybar;
+				entryhigh = high;
+				end
+			else if close < low + zone*(high - low) then begin
+				buy ("BuyLOpen") 1 contract next bar on open;
+				entrybar = todaybar;
+				entrylow = low;
+			end;
+		end;
+			
+			
+{ Enter stop after delay }
+	if marketposition <> 0 and todaybar - entrybar >= delaybeforestop then begin
+				if marketposition > 0 then sell ("SellStop") all contracts next bar at entrylow - .0001 stop
+					else if marketposition < 0 then buy to cover ("BuyStop") all contracts next bar at entryhigh + .0001 stop;
+				end
+{ post highest high and lowest low since entry, before delay }			
+			else begin
+				if marketposition > 0 then entrylow = minlist(low,entrylow)
+					else if marketposition < 0 then entryhigh = maxlist(high,entryhigh);
+			end;
+			
+	if marketposition <> 0 and time = sess1endtime then begin
+		if marketposition > 0 then sell ("SellEOD") all contracts this bar on close
+			else if marketposition < 0 then buy to cover ("BuyEOD") all contracts this bar on close;
+		end;				
+		
+	

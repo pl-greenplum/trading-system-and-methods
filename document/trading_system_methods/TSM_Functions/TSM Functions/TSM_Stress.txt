@@ -1,0 +1,24 @@
+[LegacyColorValue = true]; 
+
+{ TSM_Stress
+  Copyright 2011, P.J.Kaufman. All rights reserved.
+ }
+  inputs: 	period(numericsimple), high1(numericseries), low1(numericseries), close1(numericseries), 
+  				high2(numericseries), low2(numericseries), close2(numericseries);
+  vars: 		stoch1(0), stoch2(0), diff(0), range1(0), range2(0);
+  
+  	TSM_Stress = 50;
+{ raw stochastics for price1 and price2 }
+	range1 = highest(high1,period) - lowest(low1,period);
+	range2 = highest(high2,period) - lowest(low2,period);
+	If range1 <> 0 and range2 <> 0 then begin
+		stoch1 = (close1 - lowest(low1,period))/range1;
+		stoch2 = (close2 - lowest(low2,period))/range2;
+	
+{ difference in stochastics }
+		diff = stoch1 - stoch2;
+	
+{ stress indicator }
+		range1 = highest(diff,period) - lowest(diff,period);
+		If range1 <> 0 then TSM_Stress = 100*(diff - lowest(diff, period))/range1;
+	end;

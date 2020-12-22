@@ -1,0 +1,8 @@
+[LegacyColorValue = true]; 
+
+{ TSM Triangular Average : Puts the greatest weight on the middle value
+  Copyright 1998-1999, PJ Kaufman. All rights reserved }
+
+	inputs :  Length(20);
+
+	plot1(TSMTriangularAverage(close,length),"TSMTriAvg");

@@ -1,0 +1,63 @@
+
+{ TSM AMA Fractal
+	Adapted from John Ehlers, "Fractal Adaptive Moving Averages," 
+	(Technical Analysis of Stocks & Commodities, October 2005)
+	Copyright 2011, P.J.Kaufman. All rights reserved. }
+	
+{ This code for stocks only becaues losslimit and trailing stop in % }	
+	inputs:	price((H+L)/2), n(16), stdfactor(2.0), trailamt(0.5), ptfactor(3.0), losslimit(0.02); {n must be an even number}
+	vars:		mean(0), sumsqr(0), avgdiff(0), fractstd(0), lowerband(0), upperband(0), ix(0),
+				bestprice(0), signal(0), wait(0); 
+
+	avgdiff = 0;
+
+	mean = TSM_AMA_fractal(price,n);
+	sumsqr = 0;
+	for ix = 0 to n-1 begin
+		sumsqr = sumsqr + square(price[ix] - mean);
+		end;
+	avgdiff = sumsqr/(n - 1);
+	
+	if avgdiff > 0 then fractstd = squareroot(avgdiff)
+		else fractstd = 0;
+		
+{ clear wait after new entry }
+	if marketposition <> 0 and signal[1] = 0 then wait = 0;
+		
+{ if stop or profittaking wait for new opposite signal }
+	if marketposition = 0 and signal[1] <> 0 then wait = signal[1];
+			
+	lowerband = mean - stdfactor*fractstd;
+	upperband = mean + stdfactor*fractstd;
+	
+
+{ entry signals }	
+	if currentbar > 1 then begin
+		if wait <= 0 and low crosses over lowerband then buy next bar at lowerband stop;
+		if wait >= 0 and high crosses under upperband then sell short next bar at upperband stop;
+		end;
+		
+{ trailing stop }
+	if marketposition <> 0 then begin
+		if marketposition <> signal[1] then bestprice = close[1];
+		if marketposition > 0 then begin
+				bestprice = maxlist(bestprice,price);
+				sell ("LongStop") next bar at bestprice - bestprice*trailamt stop;
+				end
+			else if marketposition < 0 then begin
+				bestprice = minlist(bestprice,price);
+				buy to cover ("ShortStop") next bar at bestprice + bestprice*trailamt stop;
+			end;
+		end;
+		
+{ profit target }		
+	if marketposition > 0 then sell ("LongPT") next bar at entryprice + ptfactor*trailamt*entryprice limit
+		else if marketposition < 0 then buy to cover ("ShortPT") next bar at entryprice - ptfactor*trailamt*entryprice limit;
+		
+	signal = marketposition;		
+				
+			
+	
+		
+	
+					

@@ -1,0 +1,13 @@
+{ TSM Dunnigan Choose3
+	Used by TSM Dunnigan One-Way Formula
+	by Murray Ruggiero, "Dunnigan's Way" Futures November 1998 
+	Adapted by P.J.Kaufman }
+	
+	Inputs:	Val1(numeric), Val2(numeric), Val3(numeric), ref(numeric);
+	
+	if minlist(absvalue(ref - val1),absvalue(ref - val2),absvalue(ref - val3)) =
+			absvalue(ref - val1) then TSM_Dunnigan_Choose3 = 0;	
+	if minlist(absvalue(ref - val1),absvalue(ref - val2),absvalue(ref - val3)) =
+			absvalue(ref - val2) then TSM_Dunnigan_Choose3 = 1;
+	if minlist(absvalue(ref - val1),absvalue(ref - val2),absvalue(ref - val3)) =
+			absvalue(ref - val3) then TSM_Dunnigan_Choose3 = 2 {3};			

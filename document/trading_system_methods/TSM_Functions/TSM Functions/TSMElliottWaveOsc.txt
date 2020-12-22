@@ -1,0 +1,12 @@
+[LegacyColorValue = true]; 
+
+{ TSMElliottWaveOsc : Elliott Wave Oscillator
+  Copyright 1996-1999, P.J. Kaufman. All rights reserved. }
+
+	inputs: length1(numericsimple), length2(numericsimple);
+	vars:   mean(0);
+
+	mean = (high + low) / 2;
+	TSMElliottWaveOsc = 0;
+	if average(mean,length2) <> 0 then 
+		TSMElliottWaveOsc = average(mean,length1) - average(mean,length2);

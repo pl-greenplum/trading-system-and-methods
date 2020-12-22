@@ -1,0 +1,48 @@
+{ Turtle strategy simplified 
+ 	Copyright 2011, P.J.Kaufman. All rights reverved. }
+
+inputs:	entryperiod(20), exitperiod(10), volperiod(20);
+{ inputs:	entryperiod(55), exitperiod(20); }
+
+vars:		signal(0), size(1), endoffvol(0), riskunit(0),
+			investment(1000000), allocation(0.02);
+
+{ end-off volatility is "L" the basic unit of risk }
+	if Currentbar = 1 then 
+			endoffvol = truerange
+		else
+			endoffvol = ((volperiod - 1)*endoffvol + truerange)/volperiod;
+	riskunit = endoffvol*Bigpointvalue;
+	size = investment*allocation/riskunit;
+	
+{ Entries }	
+If currentcontracts <= 0 and High > highest(high,entryperiod)[1] then begin
+		Buy ("LBO") size contracts next bar at market;
+		signal = 1;
+		End
+	Else if Currentcontracts >= 0 and low < lowest(low,entryperiod)[1] then begin
+		Sellshort ("SBO") size contracts next bar at market;
+		signal = -1;
+		end;
+		
+{ Exits }
+If Currentcontracts > 0 and low < lowest(low,exitperiod)[1] then begin
+		Setexitonclose;
+		signal = 0;
+		end
+	Else if Currentcontracts < 0 and high > highest(high,exitperiod)[1] then begin
+		Setexitonclose;
+		signal = 0;
+	end; 
+	
+{ Stop-loss }
+If Openpositionprofit <= 2*riskunit then begin
+	If Currentcontracts > 0 then sell ("Lstop") all contracts this bar on close
+		Else if Currentcontracts < 0 then buy to cover ("Sstop") all contracts this bar on close;
+	signal = 0;
+	end;
+	
+Print(file("c:\TSM5\turtle_20x10.csv"),date,",",Netprofit,",",Openpositionprofit);	
+	 
+	
+		

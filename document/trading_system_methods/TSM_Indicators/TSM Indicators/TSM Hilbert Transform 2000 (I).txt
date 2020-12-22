@@ -1,0 +1,53 @@
+[LegacyColorValue = true]; 
+
+{	Ehlers' Hilbert Transform Indicator
+	Copyright 2000, MESA Software. All rights reserved.
+	Detrending added by P J Kaufman }
+
+	Inputs: 	price((H+L)/2);
+
+	Vars:		smooth(0), detrender(0), i1(0), q1(0), i2(0), q2(0), i3(0), q3(0),
+				ji(0), jq(0), x1(0), y1(0), x2(0), y2(0), re(0), lm(0), period(0);
+
+	
+	if currentbar > 5 then begin
+		smooth = (4*price + 3*price[1] + 2*price[2] + price[3])/10;
+		detrender = (.25*smooth + .75*smooth[2] - .75*smooth[4] - .25*smooth[6])*(.046*period[1] + .332);
+		
+{ computer in-phase and quadrature components }
+	q1 = (.25*detrender + .75*detrender[2] - .75*detrender[4] - .25*detrender[6])*(.046*period[1] + .332);
+	i1 = detrender[3];
+	
+{ advance the phase of i1 and q1 by 90 degrees }
+	ji = .25*i1 + 75*i1[2] - .75*i1[4] - .25*i1[6];
+	jq = .25*q1 + .75*q1[2] - .75*q1[4] - .25*q1[6];
+	
+{ phasor addition ot equalize amplitude due to quadratre calculations (and 3 bar averaging) }
+	i2 = i1 - jq;
+	q2 = q1 + ji;
+	
+{ smooth the i and q components befoe applying the discriminator }
+	i2 = .15*i2 + .85*i2[1];
+	q2 = .15*q2 + .85*q2[1];
+	
+{ homodyne discriminator }
+	x1 = i2*i2[1];
+	x2 = i2*q2[1];
+	y1 = q2*q2[1];
+	y2 = q2*i2[1];
+	re = x1 + y1;
+	lm = x2 - y2;
+	re = .2*re + .8*re[1];
+	lm = .2*lm + .8*lm[1];
+	if lm<> 0 and re <> 0 then period = 360/arctangent(lm/re);
+	if period > 1.5*period[1] then period = 1.5*period[1];
+	if period < .67*period[1] then period = .6*period[1];
+	if period < 6 then period = 6;
+	if period > 50 then period = 50;
+	period = .2*period + .8*period[1];
+	
+	plot1(i1,"I");
+	plot2(q1,"Q");
+	
+	if date > date[1] then print(file("c:\TSM5\hilbert_IQ.csv"),date,",",i1,",",q1);
+	end;		 			

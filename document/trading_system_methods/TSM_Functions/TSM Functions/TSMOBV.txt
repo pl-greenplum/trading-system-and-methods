@@ -1,0 +1,13 @@
+[LegacyColorValue = true]; 
+
+{ TSMOBV : On-Balance Volume
+  Copyright 1998-1999, PJ Kaufman. All rights reserved }
+
+	inputs: price(numericseries);
+
+	if price > price[1]  then 
+			TSMOBV = TSMOBV[1] + volume
+		else if price < price[1] then 
+			TSMOBV = TSMOBV[1] - volume
+		else
+			TSMOBV = TSMOBV[1];

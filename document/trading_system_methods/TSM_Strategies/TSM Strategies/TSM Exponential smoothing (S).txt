@@ -1,0 +1,25 @@
+[LegacyColorValue = true]; 
+
+{ TSM Exponential : Exponential smoothing system 
+  Copyright 1994-1999, P.J. Kaufman.  All rights reserved.
+  Bases trend change on direction of trendline }
+
+{ period =	length of exponential trend
+  ptfilter = 	trend change (in pts) to give signal
+  option = 	0 to enter on close
+            1 to enter on next open
+}
+	input:	period(200), filter(0), rule(0);
+	vars:	exp(0), change(0);
+
+{ Exponential smoothing for testing anticipation }
+	Exp = SmoothedAverage(close,period);
+	change =  Exp - Exp[1];
+
+{ long signal }
+	if rule = 1 and change[1] > filter then Buy Next Bar  on open;
+	if rule = 0 and change[1] > filter then Buy This Bar  on close;
+
+{ short signal }
+	if rule = 1 and change[1] < -filter then Sell Short Next Bar  on open;
+	if rule = 0 and change[1] < -filter then Sell Short This Bar  on close;

@@ -1,0 +1,20 @@
+{ FuzzyLong function
+   From Murray A. Ruggiero, Jr., "Cybernetic Trading Systems,"      (Wiley, 1997)
+   Returns 1 if candlestick is long white
+   Returns 0 if candlestick	is long black }
+   
+inputs: 	oprice(numericseries), cprice(numericseries), lback(numeric),
+   		onecof(numeric), zerocof(numeric); 
+vars:    prevlong(0), crange(0), averange(0), ztrig(0), onetrig(0), 
+   		tall(0), scale(0);
+   		
+crange = absvalue(oprice-cprice);    						{ calculate the range for the candle } 
+ztrig = average(crange,lback)*zerocof;     				{ calculate what level represents a O }
+onetrig = average(crange,lback)*onecof; 					{ calculate what level represents a 1 }
+scale = onetrig - ztrig;    									{ calculate difference between zero and one levels }
+if scale = O then scale = 99.99;    						{ if difference is the same, set to a large bar }
+tall = maxlist(O,minlist(1,(crange-onetrig)/scale)); 	{ fuzzy membership to tall }
+{ if previous bar was tall, then relax requirements }
+if tall[1] = 1 and crange[1] - ztrig <> O then
+     tall = maxlist(1,(crange - crange[1])/(crange[1] - ztrig));
+TSM_fuzzylong = tall;

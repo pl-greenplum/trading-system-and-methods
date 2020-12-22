@@ -1,0 +1,105 @@
+[LegacyColorValue = true]; 
+
+{ TSM Intraday Time Patters
+   Copyright 2011 P.J. Kaufman.  All rights reserved.
+
+   Produce a histrogram of average moves by time
+   
+   returnoption = 0 for price difference
+   					1 for percentage 
+   mingap = minimum threshold, in % returns, to add a market
+	nbar = number of time bars in a day
+	ndays = number of days processed
+	todaybar = current bar today being processed   					
+}
+
+	inputs:	returnoption(0), mingap(0);
+   array:   timebar[200](0), ptmove[200](0), ptmoveopen[200](0),
+   			ptmoveclose[200](0);
+   vars:    first(1), nbar(0), ndays(0), divisor(0), todaybar(0), thisbar(0),
+   			firstdate(0), changefromclose(0), changefromopen(0), barchange(0), ix(0),
+   			isignclose(0), isignopen(0), openinggap(0), ngaps(0);
+
+	If Currentbar = 1 then begin
+			print (file("c:\TSM5\Intraday absolute time patterns.csv"), "Time,PTmove"); 
+			print (file("c:\TSM5\Intraday time patterns wrt open.csv"), "Time,PTmove"); 
+			print (file("c:\TSM5\Intraday absolute time wrt close.csv"), "Time,PTmove");
+			end; 
+				
+{ Test for first day }
+	If first <> 0 and nbar = 0 and date <> date[1] and date[1] <> 0 then begin
+			nbar = 1;
+			ndays = 1;
+			timebar[1] = time;
+			firstdate = date;
+			todaybar = 1;
+			first = 0;
+			changefromclose = Close - close[1];
+			changefromopen = Close -  open;
+			openinggap = absvalue(close/close[1] - 1);
+			If openinggap > mingap then ngaps = ngaps + 1;
+{			print (file("c:\TSM5\Intraday time patterns debug.csv"), nbar:5:0, ",",
+					timebar[nbar]:5:0, ",", changefromclose:5:5, ",", changefromopen:5:5); }
+			End
+		Else if Date = firstdate then begin
+			nbar = nbar + 1;
+			timebar[nbar] = time;
+			todaybar = nbar;
+			changefromclose = Close - close[1];
+{			print (file("c:\TSM5\Intraday time patterns debug.csv"), "2,",
+					timebar[nbar]:5:0, ",", changefromclose:5:5); }
+			End
+{ accumulate volume data in table in corresponding time slot }			
+		Else if date <> date[1] and first = 0 then begin
+			ndays = ndays + 1;
+			todaybar = 1;
+			changefromclose = Close - close[1];
+			isignclose = 0;
+			if changefromclose <> 0 then isignclose = changefromclose/absvalue(changefromclose);
+			isignopen = 0;
+			changefromopen = Close -  open;
+			openinggap = absvalue(close/close[1] - 1);
+			If openinggap > mingap then ngaps = ngaps + 1;
+			if changefromopen <> 0 then isignopen = changefromopen/absvalue(changefromopen);
+{			print (file("c:\TSM5\Intraday time patterns debug.csv"), "3,",
+					timebar[todaybar]:5:0, ",", changefromclose:5:5, ",", changefromopen:5:5); }
+			end
+		Else if Date = date[1] and first <> 1 and date <> firstdate then begin
+			todaybar = todaybar + 1;
+{			print (file("c:\TSM5\Intraday time patterns debug.csv"), "4,",
+					timebar[todaybar]:5:0); }
+		end;
+	
+	If returnoption = 0 and isignopen <> 0 and isignclose <> 0 and openinggap > mingap then begin
+			barchange = Close - close[1];
+{ absolute point move }	
+			ptmove[todaybar] = ptmove[todaybar] + barchange;
+{ move relative to first bar today }
+			ptmoveopen[todaybar] = ptmoveopen[todaybar] + isignopen*barchange;
+{ move relative to overnight change (close yesterday to close of first bar) }	
+			ptmoveclose[todaybar] = ptmoveclose[todaybar] + isignclose*barchange;
+			end	
+		Else if returnoption = 1 and isignopen <> 0 and isignclose <> 0 and openinggap > mingap then begin
+			barchange = close/close[1] - 1;
+{ absolute point move }	
+			ptmove[todaybar] = ptmove[todaybar] + barchange;
+{ move relative to first bar today }
+			ptmoveopen[todaybar] = ptmoveopen[todaybar] + isignopen*barchange;
+{ move relative to overnight change (close yesterday to close of first bar) }	
+			ptmoveclose[todaybar] = ptmoveclose[todaybar] + isignclose*barchange;
+		end;
+
+{	print (file("c:\TSM5\Intraday time patterns debug.csv"), 
+				 "5,", date:8:0, ",", timebar[todaybar]:5:0, ",", close:5:5, ",", barchange:5:5); }
+				 					
+	If LastBarOnChart then begin
+		For ix = 1 to nbar begin
+			print (file("c:\TSM5\Intraday absolute time patterns.csv"), 
+					timebar[ix]:5:0, ",", ptmove[ix]/ngaps:5:6); 
+			print (file("c:\TSM5\Intraday time patterns wrt open.csv"), 
+					timebar[ix]:5:0, ",", ptmoveopen[ix]/ngaps:5:6); 
+			print (file("c:\TSM5\Intraday absolute time wrt close.csv"), 
+					timebar[ix]:5:0, ",", ptmoveclose[ix]/ngaps:5:6); 
+			end;
+		end;
+	

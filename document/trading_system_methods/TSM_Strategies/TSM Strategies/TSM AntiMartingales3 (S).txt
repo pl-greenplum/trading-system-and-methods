@@ -1,0 +1,115 @@
+[LegacyColorValue = true]; 
+
+{ TSM AntiMartingales3 : AntiMartingales betting method applied to
+	moving average crossover method
+	Increase the contract size by the amount of profits in up to 3 trades in a row,
+		otherwise restart with the original investment
+  Copyright 1994-1999,2011 P J Kaufman. All rights reserved. }
+
+{	slowperiod = length of moving average 1 (fastperiod or slowperiod)
+	fastperiod = length of moving average 2 (fastperiod or slowperiod)
+	size = initial contracts
+	maxseq = number of profitable trades in sequence before 
+		beginning at the initial bet (0 = no limit) }
+
+	input: slowperiod(20), fastperiod(5), investment(100000), ATRperiod(20), 
+				maxseq(3);
+	vars:  mafast(0), maslow(0), ncontr(0), posentry(0), signal(0), profseq(0), 
+				pool(0), vol(0), lastprofit(0), allocation(0.25),
+				strategy(1), extraprofit(0);
+
+	mafast = average(close, fastperiod);
+	maslow = average(close, slowperiod);
+	vol = avgtruerange(ATRperiod)*bigpointvalue;
+	
+	if currentbar = 1 then begin
+		pool = investment;
+		ncontr = pool*allocation/vol;
+		end;
+
+{ buy when fastperiod is above slowperiod }
+	if mafast > maslow then begin
+		if signal = -1 then begin
+			lastprofit = ncontr*signal*(close - posentry)*bigpointvalue;
+			Buy to Cover This Bar  at close;
+			signal = 0;
+{ if a loss then start sequence from beginning }			
+			if lastprofit < 0 then begin
+					profseq = 0;
+					extraprofit = 0;
+					pool = investment;
+					ncontr = pool*allocation/vol;
+					end
+{ last trade was a profit }					
+				else begin
+					profseq = profseq + 1;
+					extraprofit = extraprofit + lastprofit;
+{ use all profits }					
+					if profseq <= maxseq or maxseq = 0 then begin
+							if strategy = 0 or maxseq = 0 then 
+									pool = pool + lastprofit
+								else
+									pool = investment + extraprofit;
+							ncontr = pool*allocation/vol;
+							end
+{ start sequence from the beginning }							
+						else begin
+							pool = investment;
+							ncontr = pool*allocation/vol;
+							profseq = 0;
+							extraprofit = 0;
+						end;
+					end;
+			end;
+		if signal < 1 then begin
+			Buy This Bar intportion(ncontr) contracts at close;
+			posentry = close;
+			signal = 1;
+			end;
+		end;
+	
+{ sell when fastperiod is below slowperiod }		
+	if mafast < maslow then begin
+{ exit from long position, add to profits }
+		if signal = 1 then begin
+			lastprofit = ncontr*signal*(close - posentry)*bigpointvalue;
+			Sell This Bar  at close;
+			signal = 0;
+			if lastprofit < 0 then begin
+					pool = investment;
+					ncontr = pool*allocation/vol;
+					extraprofit = 0;
+					end
+{ last trade was a profit }					
+				else begin
+					profseq = profseq + 1;
+					extraprofit = extraprofit + lastprofit;
+{ use all profits }					
+					if profseq <= maxseq or maxseq = 0 then begin
+							if strategy = 0 or maxseq = 0 then 
+									pool = pool + lastprofit
+								else
+									pool = investment + extraprofit;
+							ncontr = pool*allocation/vol;
+							end
+						else begin
+							pool = investment;
+							ncontr = pool*allocation/vol;
+							profseq = 0;
+							extraprofit = 0;
+							end;
+					end;
+			end;
+		if signal > -1 then begin
+			Sell Short This Bar intportion(ncontr) contracts at close;
+			posentry = close;
+			signal = -1;
+			end;
+		end;
+
+{	print (date:6:0, " F", mafast:2:3, " S", maslow:2:3, signal:3:0, posentry:2:3, ncontr:3:0); }	
+	if currentbar = 1 then print(file("c:\TSM5\AntiMartingales.csv"),
+			"Date,NetPL,Vol,Pool,ProfSeq,ExtraProf,Position");
+	
+	print(file("c:\TSM5\AntiMartingales.csv"),date:8:0, ",", netprofit+openpositionprofit:8:2, ",", 
+				vol:8:2, ",", pool:10:2, ",", profseq:3:0, ",", extraprofit:10:2, ",", signal*ncontr:5:3);

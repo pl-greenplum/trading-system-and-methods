@@ -1,0 +1,22 @@
+[LegacyColorValue = true]; 
+
+{ TSMElliottWaveTrend : Elliott Wave Trend
+  Find the trend using TSMElliottWaveOsc
+  Copyright 1996-1998, P J Kaufman. All rights reserved.
+
+  Function returns a value of 0, +1, -1 to identify existing trend }
+
+  inputs: period(numericsimple), trigger(numeric), 
+		length1(numericsimple), length2(numericsimple);
+  vars: trend(0), osc(0);
+
+  osc = TSMElliottWaveOsc(length1,length2);
+  if osc = highest(osc,period) and trend = 0 then trend = 1;
+  if osc = lowest(osc, period) and trend = 0 then trend = -1;
+  
+  if lowest(osc,period) < 0 and trend = -1 and 
+	osc >  -1*trigger*lowest(osc,period) then trend = 1;
+  if highest(osc,period) > 0 and trend = 1 and
+	osc < -1*trigger*highest(osc,period) then trend = -1;
+	
+  TSMElliottWaveTrend = trend;

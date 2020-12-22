@@ -1,0 +1,21 @@
+[LegacyColorValue = true]; 
+
+{ TSMPivotPointAverage : Linear weighting that allows oldest items to be negative
+  Copyright 1998-1999, PJ Kaufman. All rights reserved }
+
+	inputs :  Price(NumericSeries), Length(NumericSimple), StartWgt(NumericSimple);
+	vars   :  sum(0), sumw(0), w(0), ix(0);
+
+	w = startwgt;
+	if w = 0 then w = intportion(length*2/3)- 1;
+	sum = 0;
+	sumw = 0;
+	for ix = 1 to length begin
+	    sum = sum + w * price[ix-1];
+ 	    sumw = sumw + w;
+   	 w = w - 1;
+	    end;
+	if sumw <> 0 then
+		TSMPivotPointAverage = sum / sumw
+	else
+		TSMPivotPointAverage = 0;

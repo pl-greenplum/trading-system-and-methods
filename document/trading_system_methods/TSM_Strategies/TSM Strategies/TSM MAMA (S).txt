@@ -1,0 +1,57 @@
+{ TSM MAMA (Ehlers) MESA Adaptive Moving Average
+	Copyright 2003-2011, P.J.Kaufman. All rights reserved.
+	From John Ehlers, "Rocket Science for Traders" (Wiley, 2001) }
+	
+	inputs:	price((H+L)/2), fastlimit(.5), slowlimit(.05);
+	vars:		smooth(0), detrender(0), i1(0), q1(0), ji(0), jq(0), i2(0), q2(0),
+				re(0), im(0), period(0), smoothperiod(0), phase(0), deltaphase(0),
+				alpha(0), MAMA(0), FAMA(0);
+				
+	if currentbar > 5 then begin
+		smooth = (4*price + 3*price[1] + 2*price[2] + price[3])/10;
+		detrender = (.0962*smooth + .5769*smooth[2] - .5769*smooth[4] -
+							.0962*smooth[6])*(.075*period[1] + .54);
+
+{ compute InPhase and Quadrature components }
+		Q1 = (.0962*detrender + .5769*detrender[2] - .5769*detrender[4] -
+							.0962*detrender[6])*(.075*period[1] + .54);
+		I1 = detrender[3];
+		
+{ advance the pulse of i1 and q1 by 90 degrees }
+		JI = (.0962*I1 + .5769*I1[2] - .5769*I1[4] - .0962*I1[6])*(.075*period[1] + .54);
+		JQ = (.0962*Q1 + .5769*Q1[2] - .5769*Q1[4] - .0962*Q1[6])*(.075*period[1] + .54);
+				
+{ phase addition for 3-bar averaging }
+		I2 = I1 - JQ;
+		Q2 = Q1 + JI;
+		
+{ smooth the i and q components before applying }
+		I2 = .2*I2 + .8*I2[1];
+		Q2 = .2*Q2 + .8*Q2[1];
+		
+{ hymodyne discriminator }
+		Re = I2*I2[1] + Q2*Q2[1];
+		Im = I2*Q2[1] + Q2*I2[1];
+		Re = .2*Re + .8*Re[1];
+		Im = .2*Im + .8*Im[1];
+		if Im <> 0 and Re <> 0 then period = 360/ArcTangent(Im/Re);
+		if period > 1.5*period[1] then period = 1.5*period[1];
+		if period < .67*period[1] then period = .67*period[1];
+		if period < 6 then period = 6;
+		if period > 50 then period = 50;
+		period = .2*period + .8*period[1];
+		smoothperiod = .33*period + .67*smoothperiod[1];
+		if I1 <> 0 then phase = ArcTangent(Q1/I1);
+		deltaphase = phase[1] - phase;
+		if deltaphase < 1 then deltaphase = 1;
+		alpha = fastlimit/deltaphase;
+		if alpha < slowlimit then alpha = slowlimit;
+		MAMA = alpha*price + (1 - alpha)*MAMA[1];
+		FAMA = .5*alpha*MAMA + (1 - .5*alpha)*FAMA[1];
+		
+		if FAMA < MAMA then buy 1 contract this bar on close
+			else if FAMA > MAMA then sell short 1 contract this bar on close;
+		
+	end;
+		
+				

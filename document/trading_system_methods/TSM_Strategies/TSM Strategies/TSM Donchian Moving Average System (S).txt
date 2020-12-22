@@ -1,0 +1,30 @@
+[LegacyColorValue = true]; 
+
+{ TSM Donchian Moving Average System
+  Copyright 2011 P J Kaufman. All rights reserved. }
+
+{ period = length of calculaton
+  crossoption =0 using trendline, =1 use price crossing trendline
+}
+  input: longperiod(20), shortperiod(5), bandfactor(1.0), investment(100000);
+  vars:	MAlong(0), MAshort(0), signal(0), price(0), band(0), size(0);
+
+	MAlong = average(close,longperiod);
+	MAshort = average(close,shortperiod);
+	band = AvgTrueRange(longperiod)*bandfactor;
+	size = investment/(AvgTrueRange(longperiod)*bigpointvalue);
+	
+{ entries }	
+	If Marketposition < 1 and close > MAlong[1] + band[1] and close > MAshort[1] + band[1] then
+			Buy size contracts this bar on close
+		else if Marketposition > -1 and close < MAlong[1] - band[1] and close < MAshort[1] - band[1] then
+			Sell short size contracts this bar on close;
+
+{ exits }			
+	If Marketposition > 0 and (close < MAlong[1] - band[1] or close < MAshort[1] - band[1]) then
+			Sell all contracts this bar on close
+		Else if marketposition < 0 and (Close > MAlong[1] + band[1] or close > MAshort[1] + band[1]) then
+			Buy to cover all contracts this bar on close;
+			
+	print(file("c:\TradeStation\Donchian_PL.csv"), date:8:0, ",", openpositionprofit+netprofit:10:0); 
+	

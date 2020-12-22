@@ -1,0 +1,22 @@
+[LegacyColorValue = true]; 
+
+{ Inverse Fisher Transform of RSI
+  By John Ehlers
+  Copyright 2004-2005, P.J.Kaufman }
+
+  inputs:	mom(10), RSIper(20), waper(30), avgper(10), cumper(125);
+  vars:		x1(0), x2(0), invfisher(0), series(0), signalper(5), avgfisher(0), cumfisher(0), avgcum(0);
+
+  series = close - close[mom];
+  x1 = .1*(rsi(series,rsiper) - 50);
+  x2 = waverage(x1,waper);
+  invfisher = 100*(expvalue(2*x2) - 1.0)/(expvalue(2*x2) + 1);
+  avgfisher = (avgfisher*(avgper-1) + invfisher)/avgper;
+  if cumper = 0 or currentbar <= cumper then cumfisher = cumfisher + invfisher
+		else cumfisher = cumfisher - cumfisher/cumper + invfisher;
+  if cumper <> 0 then avgcum = cumfisher/cumper;
+
+  plot1(invfisher,"InvFish");
+  plot2(average(invfisher,signalper),"Signal");
+{  plot3(avgfisher,"Avgoff");
+  plot4(avgcum,"CumFish"); }

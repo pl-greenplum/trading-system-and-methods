@@ -1,0 +1,44 @@
+{ TSM_Dunnigan_Trend
+	by Murray Ruggiero, "Dunnigan's Way," Futures, November 1998
+	Adapted by P.J.Kaufman. }
+	
+	inputs:	StrnType(numeric);
+	vars:		trend(0), shorttrend(0), longtrend(0), downtrend(false), uptrend(false),
+				curlow(999999), curhigh(-999999), CTlow(0), CThigh(0), scale(0);
+
+{ A downtrend occurs when prices set both lower highs and lower lows,
+	an uptrend is when it sets both higher highs and higher lows. }
+	if strntype = 0 then begin
+			downtrend = high < high[1] and low < low[1];
+			uptrend = high > high[1] and low > low[1];
+			end
+		else if strntype = 1 then begin
+			downtrend = high < high[1] and low < low[1] and high[1] < high[2] and low[1] < low[2];
+			uptrend = high > high[1] and low > low[1] and high[1] > high[2] and low[1] > low[2]; 
+		end;
+		
+{ Define a short-term downtrend when prices make lower highs and lower lows, 
+	confirmed when prices take out the low of the current uptrend. }
+	if downtrend = true and low <= CTlow then shorttrend = -1;
+	
+{ Define a short-term uptrend when prices make higher highs and higher lows, 
+	confirmed when prices take out the high of the current downtrend. }
+	if uptrend = true and high >= CThigh then shorttrend = 1;
+
+{ Record the current countertrend low in a short-term uptrend }
+	if shorttrend = 1 and high > curhigh and high > high[1] then CTlow = low;
+{ Record the current countertrend high in a short-term downtrend }
+	if shorttrend = -1 and low < curlow and low < low[1] then CThigh = high;
+	
+{ Reset current high or low in the direction of the short-term trend when the trend changes }
+	if shorttrend = 1 and shorttrend[1] = -1 then curhigh = high
+		else if shorttrend = -1 and shorttrend[1] = 1 then curlow = low;
+		
+{ Record the current high and low of the short-term trend }
+	if shorttrend = -1 {and curlow > low then curlow = low} then  curlow = maxlist(curlow,low)
+		else if shorttrend = 1 {and curhigh < high then curhigh = high} then curhigh = minlist(curhigh,high);
+		
+	TSM_Dunnigan_Trend = shorttrend;
+	
+
+	

@@ -1,0 +1,68 @@
+[LegacyColorValue = true]; 
+
+{ TSM Intraday High and Low Distribribution 
+   Copyright 1995-1999 P.J. Kaufman.  All rights reserved.
+
+   Produce a histrogram of frequency of high and low appearing at different
+   times of day.  }
+
+   inputs:  minutes(15), endate(940227);
+   array:   hdist[100](0), ldist[100](0), endtime[100](0);
+   vars:    n(0), max(0), init(2), thigh(0), hightime(0), tlow(0), lowtime(0), k(0), tot(0);
+
+{ Test for a new day }
+   if date <> date[1] then begin
+{  Finish processing yesterday }
+      if init = 0 then begin
+         if hightime <> 0 then hdist[hightime] = hdist[hightime] + 1;
+         if lowtime <> 0 then ldist[lowtime] = ldist[lowtime] + 1;
+         if date >= endate then begin
+            tot = 0;
+            print("time high  low");
+            print (File("INTRAHL.txt"),"time, high, low");
+            for k = 1 to max begin
+                 print (endtime[k]:4:0, hdist[k]:5:0, ldist[k]:4:0);
+                 print (File("INTRAHL.txt"),endtime[k]:4:0, hdist[k]:5:0, ldist[k]:4:0);
+                 tot = tot + hdist[k];
+                 end;
+            print (tot:9:0);
+            end;
+         end;
+      if init > 0 then init = init - 1;
+      n = 0;
+      end;
+
+{ Initialize new day }
+   if n = 0 then begin
+      thigh = high;
+      hightime = 1;
+      tlow = low;
+      lowtime = 1;
+      end;
+
+   n = n + 1;
+   if init = 1 then begin
+      if n > max then max = n;
+      endtime[n] = time;
+{     print (date:6:0,n:3:0,max:3:0,endtime[n]:5:0);      }
+      end;
+
+{ Next interval in same day }
+   if high > thigh then begin
+      thigh = high;
+      hightime = n;
+      end;
+   if high = thigh and n > max / 2 then begin
+      thigh = high;
+      hightime = n;
+      end;
+   if low < tlow then begin
+      tlow = low;
+      lowtime = n;
+      end;
+   if low = tlow and n > max / 2 then begin
+      tlow = low;
+      lowtime = n;
+      end;
+
+{  print (date:6:0, time:5:0, n:3:0, max:3:0, thigh:5:0, tlow:5:0, hightime:3:0, lowtime:3:0); }

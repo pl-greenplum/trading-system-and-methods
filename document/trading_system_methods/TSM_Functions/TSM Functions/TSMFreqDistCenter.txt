@@ -1,0 +1,51 @@
+[LegacyColorValue = true]; 
+
+{ TSMFreqDistCenter: Create a frequency distribution of no more than 20 cells
+	and returns the percentage level of the location of the center (mode)
+  Copyright 1998-1999, PJ Kaufman. All rights reserved.
+
+  NOTE:  Users may find that the median is the best representation of
+			the center of the distribution.
+	Be sure to make the number of cells no more than 25% of the "length"
+
+ 	 price = input series
+ 	 length = number of past items to be included in the distribution
+ 	 ncells = the number of cells in the frequency distribution (default and maximum = 20) }
+
+	inputs: price(numericseries), length(numericsimple), ncells(numericsimple);
+	vars:	n(0), k(0),  ix(0), iy(0), save(0), top(0), bot(0), size(0), bound(0),
+			max(0), m(0), loc(0);
+	array: cells[20](0), scale[20](0);
+
+	n = length;
+	k = ncells;
+	if k > 20 then k = 20;
+{ find range of prices over data series }
+	top = highest(price,n);
+	bot = lowest(price,n);
+	size = (top - bot) / (k - 1);
+	bound = bot;
+	for ix = 1 to k begin
+		bound = bound + size;
+		scale[ix] = bound;
+		cells[ix] = 0;
+		end;
+{ scan data, enter frequency }
+	for iy = 0 to n - 1 begin
+		for ix = 1 to k begin
+			if price[iy] <= scale[ix] and (ix = 1 or price[iy] > scale[ix-1]) then cells[ix] = cells[ix] + 1;
+			end;
+		end;
+
+	max = 0;
+	loc = 0;
+	print(" New day:",date:7:0);
+	for iy = 1 to k begin
+		print(iy:3:0,scale[iy]:5:4,cells[iy]:5:0);
+		if cells[iy] >= max then begin
+			max = cells[iy];
+			loc = iy;
+			end;
+		end;
+	
+	TSMFreqDistCenter = loc*100 / k;

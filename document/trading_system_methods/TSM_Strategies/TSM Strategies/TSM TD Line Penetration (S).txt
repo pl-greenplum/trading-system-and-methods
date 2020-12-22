@@ -1,0 +1,85 @@
+{ TSM5 TD Line Penetration
+	Copyright 2011, P.J.Kaufman. All rights reserved. 
+	From Thomas DeMark, The New Science of Technical Analysis }
+	
+	inputs: 	multi(1), str(1);
+	vars:		lastlow(0), lastlowbar(0), secondlow(0), secondlowbar(0), lasthigh(0),
+				lasthighbar(0), secondhigh(0), secondhighbar(0), size(0), lowline(0),
+				highline(0), qual1buy(false), qual1sell(false), qual2buy(false),
+				qual2sell(false), qual3buy(false), qual3sell(false),
+				buycondition(false), sellcondition(false), TLlowest(0), TLlowestbar(0),
+				buydiff(0), buytarget(0), buyloss(0), TLhighest(0), TLhighestbar(0), selldiff(0),
+				selltarget(0), sellloss(0), slopeupline(0), slopedownline(0), oldbuy(0),
+				oldsell(0),
+				investment(25000);
+	
+{ position size }
+	if multi = 1 then
+			size = investment/(stddev(close-close[1],30)*bigpointvalue)
+		Else
+			size = 1;
+	size = maxlist(size,1);
+
+	lastlow = swinglow(1,low,str,50);
+	lastlowbar = swinglowbar(1,low,str,50);
+	secondlow = swinglow(2,low,str,50);
+	secondlowbar = swinglowbar(2,low,str,50);
+	lastlowbar = minlist(lastlowbar,50);
+	secondlowbar = minlist(secondlowbar,50);
+	
+	lasthigh = swinghigh(1,high,str,50);
+	lasthighbar = swinghighbar(1,high,str,50);
+	secondhigh = swinghigh(2,high,str,50);
+	secondhighbar = swinghighbar(2,high,str,50);
+	lasthighbar = minlist(lasthighbar,50);
+	secondhighbar = minlist(secondhighbar,50);
+	
+	lowline = TLvalue(secondlow,secondlowbar,lastlow,lastlowbar,0);
+	highline = TLvalue(secondhigh,secondhighbar,lasthigh,lasthighbar,0);
+	
+	qual1buy = Close < close[1];
+	qual1sell = Close > close[1];
+	qual2buy = true;
+	qual2sell = true;
+	qual3buy = highline > maxlist(close-low,close-close[1]) + close;
+	qual3sell = lowline < Close - maxlist(high-close,close[1] - close);
+	
+	buycondition = highline <> 0 and lasthigh < secondhigh and high < highline and
+						(qual1buy or qual2buy or qual3buy);
+	sellcondition = lowline <> 0 and lastlow > secondlow and low > lowline and
+						(qual1sell or qual2sell or qual3sell);
+						
+	If buycondition then buy ("line buy") size contracts next bar at highline stop;
+	If sellcondition then sell ("line sell") size contracts next bar at lowline stop;
+	
+	If buycondition and marketposition <> 1 then begin
+		TLlowest = lowest(low,secondhighbar);
+		TLlowestbar = lowestbar(low,secondhighbar);
+		TLlowestbar = minlist(TLlowest,50);
+		slopedownline = (lasthigh - secondhigh)/(lasthighbar - secondhighbar);
+		oldbuy = highline + slopedownline*TLlowestbar;
+		buydiff = oldbuy - TLlowest;
+		If buydiff < 0 then buydiff = 0;
+		buytarget = highline + buydiff;
+		buyloss = highline - buydiff;
+		end;
+		
+	If sellcondition and marketposition <> -1 then begin
+		TLhighest = highest(high,secondlowbar);
+		TLhighestbar = highestbar(high,secondlowbar);
+		TLhighestbar = minlist(TLhighestbar,50);
+		slopeupline = (lastlow - secondlow)/(lastlowbar - secondlowbar);
+		oldsell = lowline + slopeupline*TLhighestbar;
+		selldiff = TLhighest - oldsell;
+		selldiff = maxlist(selldiff,0);
+		selltarget = lowline - selldiff;
+		sellloss = lowline + selldiff;
+		end;
+		
+	sell ("profit ex-ln") next bar at buytarget limit;
+	sell ("loss ex-ln") next bar at buyloss stop;
+	
+	Buy to cover ("profit ex-sh") next bar at selltarget limit;
+	Buy to cover ("loss ex-sh") next bar at sellloss stop;
+	
+	

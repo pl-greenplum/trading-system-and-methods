@@ -1,0 +1,12 @@
+[LegacyColorValue = true]; 
+
+{ TSMprojrangeR2 : Projected Range, Resistance Level 2
+  Copyright 1998-1999, PJ Kaufman. All rights reserved }
+
+	inputs: phigh(numericseries),  plow(numericseries),  pclose(numericseries);
+	vars:	pivot(0), R1(0), S1(0);
+
+	pivot = (phigh + plow + pclose) / 2;
+	S1 = 2 * pivot - phigh;
+	R1 = 2 * pivot - plow;
+	TSMprojrangeR2 = (pivot - S1) + R1;

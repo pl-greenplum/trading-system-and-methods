@@ -1,0 +1,23 @@
+[LegacyColorValue = true]; 
+
+{ TSMMAsignal : Moving Average signal based on trendline or price crossing trendline
+  Copyright 1994-1999,2011 P J Kaufman. All rights reserved.  }
+
+{ period = length of moving average trend
+  crossoption = 0 then use trendline, = 1 then use price cross
+}
+  input: period(numericsimple), filter(numeric), Crossoption(numericsimple);
+  vars:  ma(0), signal(0);
+
+  signal = signal[1];
+  
+{ moving average for testing anticipation }
+  ma = Average(close,period);
+ { long signal }
+ 	if Crossoption = 0 and ma > ma[1] then signal = 1
+ 		Else if Crossoption <> 0 and close > ma then signal = 1;
+{ short signal }
+  if crossoption = 0 and ma < ma[1] then signal = -1
+  		Else if Crossoption <> 0 and close < ma then signal = -1;
+  		
+  TSMMAsignal = signal;

@@ -1,0 +1,97 @@
+[LegacyColorValue = true]; 
+
+{  TSM Shock study
+   Copyright 1996-1999,2012, P.J.Kaufman.  All rights reserved.
+  
+   Identify price shock and pattern during period following shock   
+   Output to c:\test\shock.txt  }
+
+{  vperiod = period of "normal" volatility measurement
+   minshk  = volatility increase which is recognized as a "shock"
+   normfact = reduction to within factor of normal to end shock period }
+
+   input:       vperiod(50), minshk(3), normfact(1.25);
+   vars:        TR(0), vlty(0), shock(0), shockvlty(0), normal(0), ix(0), ndays(0), maxshk(0),
+                   vnorm(0), cumvlty(0), maxdays(3000), xper(1), xvlty(0), n(0), maxn(50);
+   arrays:     dvlty[3000](0), shkfact[50](0), normvlty[50](0), sdate[50](0), stime[50](0),
+                    elapse[50](0), prev[50](0), sopen[50](0), sbegin[50](0), shigh[50](0), 
+                    slow[50](0);
+
+   if currentbar = 1 then
+      print (file("c:\TSM5\shock.txt"), " factor      vlty   date   time   date   periods",
+               "   prev   open   begin   high   low   end");
+
+   TR = truehigh - truelow;
+   if shock = 0 and currentbar > 0 then begin
+{ volatility does not include today or periods inside shock }
+      vnorm = vnorm + TR[1];
+      if ndays < maxdays then begin
+         ndays = ndays + 1;
+         dvlty[ndays] = TR;
+         if ndays > 0 then cumvlty = vnorm/ndays;
+         vlty = 0;
+         if currentbar > vperiod + 2 then begin
+            for ix = ndays - vperiod to ndays - 1 begin
+                 vlty = vlty + dvlty[ix];
+                 end;
+            vlty = vlty / vperiod;
+            end;
+         end;
+      end;
+ {   print (date:8:0, TR:4:2, ndays:5:0, cumvlty:4:2, vlty:4:2, shock:3:0); }
+
+{ Test for a new shock }
+   if  currentbar > vperiod + 2 and vlty > 0 and TR >= vlty*minshk and
+       TR/vlty > maxshk and n < maxn then begin
+       n = n + 1;
+       shkfact[n] = TR / vlty;
+       normvlty[n] = vlty;
+       sdate[n] = date;
+       stime[n] = time;
+       elapse[n] = 0;
+       prev[n] = close[1];
+       sopen[n] = open;
+       sbegin[n] = close;
+       shigh[n] = close;
+       slow[n] = close;
+       maxshk = shkfact[n];
+       if n = 1 then begin
+          if close - close[1] > 0 then Sell Short Next Bar  at market else Buy Next Bar  at market;
+          end;
+       end;
+
+{ Test for end of shocks, all at same time }
+   if n > 0 and average(TR,xper) <= normvlty[1]*normfact then begin
+      for ix = 1 to n begin
+           elapse[ix] = elapse[ix] + 1;
+           if high > shigh[ix] then shigh[ix] = high;
+           if low < slow[ix] then slow[ix] = low;
+           print (file("c:\TSM5\shock.txt"), shkfact[ix]:4:2, normvlty[ix]:5:4, sdate[ix]:8:0,
+                     stime[ix]:6:0, date:8:0, elapse[ix]:5:0, prev[ix]:5:4, sopen[ix]:5:4, 
+                     sbegin[ix]:5:4, shigh[ix]:5:4, slow[ix]:5:4, close:5:4);
+           end;
+      n = 0;
+      maxshk = 0;
+      Sell Next Bar  at market;
+      Buy to Cover Next Bar  at market;
+      end;
+
+{ If shocks still active, then update data }
+   if n > 0 then begin
+      for ix = 1 to n begin
+           elapse[ix] = elapse[ix] + 1;
+           if high > shigh[ix] then shigh[ix] = high;
+           if low < slow[ix] then slow[ix] = low;
+           end;
+      end;
+
+{ Print unfinished shocks }
+   if lastbaronchart and currentbar > vperiod and n>0 then begin
+      for ix = 1 to n begin
+           print (file("c:\TSM5\shock.txt"), shkfact[ix]:4:2, normvlty[ix]:5:4, sdate[ix]:8:0,
+                     stime[ix]:6:0, date:8:0, elapse[ix]:5:0, prev[ix]:5:4, sopen[ix]:5:4, 
+                     sbegin[ix]:5:4, shigh[ix]:5:4, slow[ix]:5:4, close:5:4, 
+                     average(TR,xper):5:4);
+           end;
+     end;
+ 

@@ -1,0 +1,19 @@
+{ TSM Elliott Wave
+	Based on Ruggiero, "Building the Wave" Futures, April 1996
+	Copyright 2011, P.J.Kaufman. All rights reserved. }
+
+	inputs:	period(80), trigger(0.70),length1(5), length2(35);
+	
+	vars:		wave(0), EWO(0);
+
+	Wave = TSMElliottWave(period,trigger,length1,length2);
+	EWO = TSMElliottWaveOsc(length1,length2);
+
+	If EWO >= 0 and marketposition <> 1 then begin
+		If wave[1] <> 3 and wave = 3 then buy ("Wave3") this bar on close;
+		If wave[1] <> 5 and wave = 5 then buy ("Wave5") this bar on close;
+		end;
+		
+	If Marketposition = 1 and EWO < 0 then begin
+		Sell ("EWO") all contracts this bar on close;
+		end;

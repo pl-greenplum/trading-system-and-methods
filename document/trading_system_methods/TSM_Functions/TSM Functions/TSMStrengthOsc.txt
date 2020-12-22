@@ -1,0 +1,15 @@
+[LegacyColorValue = true]; 
+
+{ TSMStrengthOsc: Stength Oscillator
+  Copyright 1999,2011 P.J.Kaufman. All rights reserved.
+}
+  inputs: phigh(numericseries), plow(numericseries), pclose(numericseries),
+          length(numericsimple);
+  vars:   num(0), denom(0), diff(0), range(0);
+
+  diff = pclose - pclose[1];
+  num = average(diff,length);
+  range = phigh - plow;
+  denom = average(range,length);
+  TSMStrengthOsc = 0;
+  if denom <> 0 then TSMStrengthOsc = num / denom;

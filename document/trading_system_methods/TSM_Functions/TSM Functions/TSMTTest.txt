@@ -1,0 +1,18 @@
+[LegacyColorValue = true]; 
+
+{ TSMTtest : Student T-test
+  Copyright 1998-1999, PJ Kaufman. All rights reserved }
+
+	inputs: price(numericseries), length(numericsimple);
+	vars:	n(0), avg(0), diff(0), diff2(0), sd(0);
+
+	n = length;
+	if currentbar < length then n = currentbar;
+	avg = average(price - price[1],n);
+	diff = price - average(price,n);
+	diff2 = power(diff,2);
+	sd = squareroot(average(diff2,n));
+	if sd <> 0 then
+		TSMTtest = squareroot(n) * avg  / sd
+	else
+		TSMTtest = 0;

@@ -1,0 +1,32 @@
+{ TSM5 Fade Trends
+	Copyright P.J.Kaufman, 2012. All rights reserved.
+	PJK if previous week was up and Monday is up then fade from 
+		Monday close or Tuesday AM or Wed AM. }
+	
+	inputs:	pattern(1);
+	vars:		size(0), investment(25000);
+	
+{ position size }
+	size = investment / (avgtruerange(30)*bigpointvalue);
+	size = maxlist(size,1);
+	
+	If pattern = 1 and Dayofweek(date) = 1 then begin
+		If close[1] > close[6] and close[6] > close[11] and open > close[1] and close > close[1] then
+				Sell short ("S Mon fade") size contracts this bar on close 
+			Else if close[1] > close[6] and close[6] > close[11] and open > close[1] and close > close[1] then
+				Buy("L Mon fade") size contracts this bar on close;
+		end;
+		
+	If pattern = 2 and dayofweek(date) = 2 then begin
+		If close[2] > close[7] and close[7] > close[12] and open > close[1] and close > close[1] then
+				Sell short ("S Tues fade") size contracts this bar on close 
+			Else if close[2] > close[7] and close[7] > close[12] and open > close[1] and close > close[1] then
+				Buy("L Tues fade") size contracts this bar on close;
+		end;
+		
+	If Marketposition <> 0 then begin
+		Sell this bar on close;
+		Buy to cover this bar on close;
+		end;				
+				
+			

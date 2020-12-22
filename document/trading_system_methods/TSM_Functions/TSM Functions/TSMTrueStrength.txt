@@ -1,0 +1,17 @@
+[LegacyColorValue = true]; 
+
+{ TSMTrueStrength: Blau's True Strength Index
+ Copyright 1998-1999, PJ Kaufman, All rights reserved.}
+
+  inputs: price(numericseries), smooth1(numericsimple), smooth2(numericsimple);
+  vars: num(0), denom(0), diff1(0), adiff1(0), savg1(0), savg2(0), aavg1(0), aavg2(0);
+
+  diff1 = price - price[1];
+  savg1 = savg1[1] + (2 / (smooth1 + 1)) * (diff1 - savg1[1]);
+  savg2 = savg2[1] + (2 / (smooth2 + 1)) * (savg1 - savg2[1]);
+  adiff1 = absvalue(diff1);
+  aavg1 = aavg1[1] + (2 / (smooth1 + 1)) * (adiff1 - aavg1[1]);
+  aavg2 = aavg2[1] + (2 / (smooth2 + 1)) * (aavg1 - aavg2[1]);
+
+  TSMTrueStrength = 0;
+  if aavg2 <> 0 then TSMTrueStrength = 100*savg2 / aavg2;

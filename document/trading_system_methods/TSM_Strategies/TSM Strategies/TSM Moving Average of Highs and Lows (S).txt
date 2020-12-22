@@ -1,0 +1,24 @@
+[LegacyColorValue = true]; 
+
+{ TSM Moving Average of Highs and Lows
+  Copyright 2011 P J Kaufman. All rights reserved. }
+
+{ period = length of calculaton
+  entryoption: 0= enter on intraday break of band,
+  					1= enter on close after a break of band
+}
+  input: period(40), entrypriceoption(0);
+  vars:	signal(0), price(0), MAhighs(0), MAlows(0);
+
+  	MAhighs = average(high,period);
+  	MAlows = average(low,period);
+  	
+  	If entrypriceoption = 0 then begin
+  			buy 1 contract at next bar MAhighs stop;
+  			sell short 1 contract at next bar MAlows stop;
+  			end
+  		Else if Entrypriceoption = 1 then begin
+  			If high > MAhighs then buy this bar on close
+  			Else if low < MAlows then sell short this bar on close;
+  		end;
+  

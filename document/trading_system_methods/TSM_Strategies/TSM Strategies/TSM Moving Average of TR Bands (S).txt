@@ -1,0 +1,22 @@
+[LegacyColorValue = true]; 
+
+{ Trading Systems and Methods: Moving average with true range  bands
+  Moving averge systems with entries using true range bands
+  Copyright 1994-1999, P J Kaufman.  All rights reserved. }
+
+{ period = length of moving average
+  band = multiplier of true range to use as entry band
+  }
+	input:	period(20), band(5);
+	vars:	ma(0), trange(0), avgtr(0);
+
+{ Moving average trend }
+	ma  = average(close[1],period);
+	trange = truerange;
+	avgtr = average(trange[1],period);
+
+{ long signal : close must penetrate upper band  }
+	if close  >  ma + avgtr*band then Buy This Bar  on close;
+
+{ short signal : close must penentrate lower band }
+	if close < ma - avgtr*band then Sell Short This Bar  on close;

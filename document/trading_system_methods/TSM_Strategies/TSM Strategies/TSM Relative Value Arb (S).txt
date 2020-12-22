@@ -1,0 +1,121 @@
+[LegacyColorValue = true]; 
+
+{ Relative Value Arb
+	Copyright 2002,2008, P.J.Kaufman. All rights reserved. }
+
+	inputs:	period(14), sellzone(80), buyzone(20), exitzone(50), maxdays(3);
+	vars:		mom1(0), mom2(0), stress(0), diff(0), volper(20), signal(0), psignal(0),
+				edate(0), eprice1(0), eprice2(0), esize2(0), xreason(" "), PL1(0),
+				PL2(0), netPL(0), totalPL(0), vol1(0), vol2(0), pvol1(0), pvol2(0), size1(0), size2(0);
+{ set factors to .01 and .01 for stocks, and .01 and 1.0 for stock vs commodity }
+	vars:		factor1(.01), factor2(1); 
+	vars:		usevolfilter(false);
+
+	mom1 = fastk(period);
+	mom2 = fastk(period) of data2;
+	diff = mom1 - mom2;
+	Stress = 100*(diff - lowest(diff,period))/(highest(diff,period) - lowest(diff,period));
+
+{ adjust $ volatility -- stock price (data1) is given x 100 }
+	pvol1 = vol1;
+	pvol2 = vol2;
+	vol1 = AvgTrueRange(volper)*bigpointvalue*factor1;
+	vol2 = (AvgTrueRange(volper) of data2)*bigpointvalue of data2*factor2;
+{	size1 = 100;
+	size2 = 100*vol1/vol2;}
+	size1 = vol2/vol1;
+	size2 = 1;		{ 1 contract of crude }
+	xreason = " ";
+
+{ exit normal stress target }
+	if signal > 0 and stress > 100 - exitzone then begin
+			Sell ("XLtarget") This Bar  on close;
+			xreason = "target";
+			end
+		else if signal < 0 and stress < exitzone then begin
+			Buy to Cover ("XStarget") This Bar  on close;
+			xreason = "target";
+		end;
+
+{ exit on time }
+	if signal <> 0 and barssinceentry >= maxdays and xreason = " " then begin
+		Sell ("XLtime") This Bar  on close;	
+		Buy to Cover ("XStime") This Bar  on close;
+		xreason = "Xtime";
+		end;
+
+{ exit current position }
+	if xreason <> " " then begin
+		PL1 = 100*signal*size1*(close*factor1 - eprice1)*bigpointvalue;
+		PL2 = -100*signal*size2*(factor2*close of data2 - eprice2)*bigpointvalue of data2;
+		netPL = PL1 + PL2;
+		totalPL = totalPL + netPL;
+{ alter sign of size for printout }
+		size1 = signal*size1;
+		size2 = -signal*size2;
+		signal = 0;
+		
+{ print trades }
+		vars:	firsttrade(true), filename(" "), testid(" "), marketid(" "), loc(0);
+
+		if firsttrade then begin
+			firsttrade = false;
+			marketid = getsymbolname;
+			loc = instr(marketid,"_");
+			if loc = 0 then loc = instr(marketid,"-");
+			if loc = 0 then loc = instr(marketid,".");
+			if loc <> 0 then marketid = leftstr(marketid,loc-1)
+				else marketid = leftstr(marketid,3);
+			testid = marketid;
+			marketid = getsymbolname of data2;
+			loc = instr(marketid,"_");
+			if loc = 0 then loc = instr(marketid,"-");
+			if loc = 0 then loc = instr(marketid,".");
+			if loc <> 0 then marketid = leftstr(marketid,loc-1)
+				else marketid = leftstr(marketid,3);
+			testid = testid + "_" + marketid;
+			filename = "c:\test\RelativeValue\relativevaluetrades_" + testid + ".csv";
+			filedelete(filename);
+			fileappend(filename,"edate,xdate,xreason,size1,eprice1,xprice1,size2," + 
+					"eprice2,xprice2,PL1,PL2,netPL,totalPL,vol1,vol2" + newline);
+			end;
+		fileappend(filename,
+			numtostr(edate,0) + ","
+			+ numtostr(date,0) + ","
+			+ xreason + ","
+			+ numtostr(size1,2) + ","
+			+ numtostr(eprice1,4) + ","
+			+ numtostr(close*factor1,4) + ","
+			+ numtostr(size2,2) + ","
+			+ numtostr(eprice2,4) + ","
+			+ numtostr(factor2*close of data2,4) + ","
+			+ numtostr(PL1,0) + ","
+			+ numtostr(PL2,0) + ","
+			+ numtostr(netPL,0) + ","
+			+ numtostr(totalPL,0) + ","
+			+ numtostr(vol1,2) + ","
+			+ numtostr(vol2,2) + ","
+		   + newline);
+		end;
+
+{ this uses vol rising, but could also test min vol }
+	if signal = 0 and (usevolfilter = false or (vol1 > pvol1 and vol2 > pvol2)) then begin
+		if stress > sellzone then begin
+				edate = date;
+				eprice1 = close*factor1;
+				eprice2 = factor2*close of data2;
+				esize2 = size2;
+				signal = -1;
+				Sell Short This Bar  on close;
+				end
+			else if stress < buyzone then begin
+				Buy This Bar  on close;
+				edate = date;
+				eprice1 = close*factor1;
+				eprice2 = factor2*close of data2;
+				esize2 = size2;
+				signal = 1;
+				end;
+			end;
+
+	psignal = signal;

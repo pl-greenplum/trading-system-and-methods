@@ -1,0 +1,124 @@
+[LegacyColorValue = true]; 
+
+{ TSM Weekend Patterns }
+{ Copyright 1985-1999, 2011. PJ Kaufman. All rights reserved. }
+
+	vars:	dow(0), ix(0), nx(0), error(0), Mon(0), weekly(0), cases(0),
+			div(0), pc(0), prevfri(0), savedir(0), start(0), change(0),
+			TFopen(0), TFclose(0), TFext(0), FFopen(0),
+			FFclose(0), FFext(0), Frqopen(0), Frqclose(0), Frqext(0);
+	arrays: week[16](0), oweek[16](0), xweek[16](0), pattern[5](0), cprice[5](0);
+
+	dow = dayofweek(date);
+
+	if currentbar = 1 then begin
+		week[1] = 10111; week[2] = 10110; week[3] = 10101; week[4] = 10100;
+		week[5] = 10011; week[6] = 10010; week[7] = 10001; week[8] = 10000;
+		week[9] = 11111; week[10] = 11110; week[11] = 11101; week[12] = 11100;
+		week[13] = 11011; week[14] = 11010; week[15] = 11001; week[16] = 11000;
+		end;
+
+{ Monday }
+	if dow = 1 then begin
+{ Process weekend pattern }
+		if start = 1 then begin
+			cases = cases + 1;
+{ Thursday to Friday direction }
+			change = close[1] - close[2];
+			if (open - close[1]) * change > 0 then TFopen = TFopen + 1;
+			if (close - close[1]) * change > 0 then TFclose = TFclose + 1;
+			if (change > 0 and high > close[1]) or (change < 0 and low < close[1]) then
+				TFext = TFext + 1;
+{ Friday to Friday direction }
+			change = close[1] - prevfri;
+			if (open - close[1]) * change > 0 then FFopen = FFopen + 1;
+			if (close - close[1]) * change > 0 then FFclose = FFclose + 1;
+			if (change > 0 and high > close[1]) or (change < 0 and low < close[1]) then
+				FFext = FFext + 1;
+{ Most common direction }
+			change = close - close[1];
+			nx = 0;
+			for ix = 1 to 5 begin
+				if pattern[ix] = 1 then nx = nx + 1;
+				end;
+			if (nx >= 3 and (open - close[1])*savedir > 0) or
+				(nx < 3 and (open - close[1])*savedir < 0) then Frqopen = Frqopen + 1;
+			if (nx >= 3 and (close - close[1])*savedir > 0) or
+				(nx < 3 and (close - close[1])*savedir < 0) then Frqclose = Frqclose + 1;
+			if (nx >= 3 and ((change > 0 and high > close[1]) or 
+				(change < 0 and low < close[1]))) or
+				(nx < 3 and ((change < 0 and low < close[1]) or
+				(change > 0 and high > close[1]))) then Frqext = Frqext + 1;
+{ Pattern match }
+			for ix = 1 to 16 begin
+				if weekly = week[ix] then begin
+					if (close - close[1])*savedir > 0 then xweek[ix] = xweek[ix] + 1;
+					if (close - close[1])*savedir < 0 then oweek[ix] = oweek[ix] + 1;
+					end;
+				end;
+			end;
+		for ix = 1 to 5 begin
+			pattern[ix] = 0;
+			end;
+		if close > close[1] then pattern[1] = 1 else pattern[1] = -1;
+		cprice[1] = close;
+		prevfri = close[1];
+		savedir = pattern[1];
+		end;
+{ Tuesday }
+	if dow = 2 then begin
+		if close > close[1] then pattern[2] = 1 else pattern[2] = -1;
+		cprice[2] = close;
+		end;
+{ Wednesday }
+	if dow = 3 then begin
+		if close > close[1] then pattern[3] = 1 else pattern[3] = -1;
+		cprice[3] = close;
+		end;
+{ Thursday }
+	if dow = 4 then begin
+		if close > close[1] then pattern[4] = 1 else pattern[4] = -1;
+		cprice[4] = close;
+		end;
+{ weekday }
+	if dow = 5 then begin
+		if close > close[1] then pattern[5] = 1 else pattern[5] = -1;
+		cprice[5] = close;
+		error = 0;
+{ process pattern for entire week, convert to pattern beginning with 1 }
+{		print (pattern[1]:3:3, pattern[2]:3:3, pattern[3]:3:3, pattern[4]:3:3, pattern[5]:3:3); }
+		for ix = 2 to 5 begin
+			if pattern[ix] = 0 then error = 1;
+			if error = 0 then begin
+				if pattern[ix] * pattern[1] > 0 then pattern[ix] = 1 else pattern[ix] = 0;
+				end;
+			end;
+		pattern[1] = 1;
+{		print (pattern[1]:3:0, pattern[2]:3:0, pattern[3]:3:0, pattern[4]:3:0, pattern[5]:3:0); }
+		weekly = 0;
+		if error = 0 then begin
+{ create a weekly pattern }
+			weekly = 10000 + pattern[2]*1000 + pattern[3]*100 + pattern[4]*10 + pattern[5];
+			end;
+{		print (pattern[1]:3:0, pattern[2]:3:0, pattern[3]:3:0, pattern[4]:3:0, pattern[5]:3:0, 
+				weekly:6:0);   }
+		start = 1;
+		end;
+
+	if lastcalcdate = date then begin
+		print (file("c:\TSM5\Weekend_Patterns.csv"),"Pattern,Cases,%Open,%Close"); 
+		print (file("c:\TSM5\Weekend_Patterns.csv"),"Thursday to Friday,", cases:4:0, ",", 
+				TFopen*100/cases:4:0, ",", TFclose*100/cases:4:0);
+		print (file("c:\TSM5\Weekend_Patterns.csv"),"Friday to Friday,", cases:4:0, ",", 
+				FFopen*100/cases:4:0, ",", FFclose*100/cases:4:0);
+		print (file("c:\TSM5\Weekend_Patterns.csv"),"Most frequent direction,", cases:4:0, ",", 
+				Frqopen*100/cases:4:0, ",", Frqclose*100/cases:4:0);
+		print (file("c:\TSM5\Weekend_Patterns.csv")," ");
+		print (file("c:\TSM5\Weekend_Patterns.csv"),"All patterns:");
+		print (file("c:\TSM5\Weekend_Patterns.csv"),"Pattern,Cases,%Cont in Mon Dir");
+		for ix = 1 to 16 begin
+			print (file("c:\TSM5\Weekend_Patterns.csv"),  
+					week[ix]:6:0, ",", xweek[ix] + oweek[ix]:4:0, ",",
+					xweek[ix]*100/(xweek[ix]+oweek[ix]):4:0);
+			end;
+		end;

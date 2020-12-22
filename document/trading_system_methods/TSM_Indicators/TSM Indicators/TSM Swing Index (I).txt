@@ -1,0 +1,8 @@
+[LegacyColorValue = true]; 
+
+{ TSM Swing Index: Wilder's Index
+  Copyright 1998-1999, PJ Kaufman. All rights reserved } 
+
+	inputs: limitmov(0);
+
+	plot1(TSMSwingIndex(limitmov), "TSMSwing");

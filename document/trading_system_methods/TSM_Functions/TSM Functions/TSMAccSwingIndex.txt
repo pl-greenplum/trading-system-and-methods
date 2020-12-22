@@ -1,0 +1,12 @@
+[LegacyColorValue = true]; 
+
+{ TSMAccSwingIndex: Wilder's Accumulated Swing Index
+  Copyright 1998-1999, PJ Kaufman. All rights reserved. } 
+
+{ See notes in "TSMSwingIndex". Input "limitmov" can be zero. }
+
+	inputs: limitmov(numericsimple);
+	vars:	TSMACI(0);
+
+	TSMACI = TSMACI[1] + TSMSwingIndex(limitmov);
+	TSMAccSwingIndex = TSMACI;

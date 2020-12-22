@@ -1,0 +1,55 @@
+[LegacyColorValue = true]; 
+
+{ TSM Opening Range Breakout
+  Copyright 2011, P.J.Kaufman. All rights reserved.  }
+  
+{ BOoption 	1=used fixed point range breakout
+				2=use volatiity breakout  }
+
+	inputs: 	BOoption(1), fixedpoint(1.6), volper(20), breakoutfactor(1.0),
+				holdovernight(false), precedebyinsideday(false);
+	vars:		signal(0), topen(0), vol(0), breakoutlevel(0), thigh(0), tlow(0),
+				phigh(0), plow(0), pphigh(0), pplow(0), insideday(false);
+
+{ new day }
+	if date <> date[1] then begin
+		pphigh = phigh;
+		pplow = plow;
+		phigh = thigh;
+		plow = tlow;
+		if phigh < pphigh and plow > pplow then
+			insideday = true else insideday = false;
+		signal = 0;
+		topen = open;
+		thigh = high;
+		tlow = low;
+		vol = avgtruerange(volper);
+		if BOoption = 1 then 
+				breakoutlevel = fixedpoint
+			else
+				breakoutlevel = vol*breakoutfactor;
+				
+{ if missed exiting at end of day }
+		if holdovernight = false and marketposition <> 0 then begin
+				if marketposition > 0 then sell ("XLopen") all contracts this bar on close
+					else buy to cover ("XSopen") all contracts this bar on close;
+			end;
+		end;
+		
+{ save high and low for today }
+	thigh  = maxlist(thigh,high);
+	tlow = minlist(tlow,low);		
+
+{ if short or no position }
+	if precedebyinsideday = false or insideday = true then begin		
+		if marketposition <= 0 then 
+				buy ("BOup") 1 contract next bar at topen + breakoutlevel stop
+			else if marketposition >= 0 then 
+				sell short ("BOdown") 1 contract next bar at topen - breakoutlevel stop;
+		end;
+		
+	if holdovernight = false and marketposition <> 0 and time >= sess1endtime then begin
+			if marketposition > 0 then sell ("XLEOD") all contracts this bar on close
+				else buy to cover ("XSEOD") all contracts this bar on close;
+		end;
+	

@@ -1,0 +1,10 @@
+{ TSM TradeStation Kurtosis
+	Copyright 2011, P.J.Kaufman. All rights reserved. }
+	
+	inputs:	period(20);
+	vars:		KT(0);
+	
+	KT = Kurtosis(close,period);
+	
+	plot2(KT,"TS Kurtosis");
+	

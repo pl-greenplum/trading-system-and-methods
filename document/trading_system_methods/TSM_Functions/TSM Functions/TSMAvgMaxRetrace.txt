@@ -1,0 +1,25 @@
+[LegacyColorValue = true]; 
+
+{ TSMAvgMaxRetrace : Average Maximum Retracement
+   Copyright 1999, P. J. Kaufman. All rights reserved. 
+
+	Calculate the average of each drawdown from the peak equity }
+
+	inputs: equity(numericseries);
+	vars: peak(0), draw(0), ndraw(0), tdraw(0);
+
+	if equity > peak then begin
+		peak = equity;
+		if draw > 0 then begin
+			ndraw = ndraw + 1;
+			tdraw = tdraw + draw;
+			draw = 0;
+			end;
+		end
+	else begin
+		if peak - equity > draw then draw = peak - equity;
+		end;
+	if ndraw > 0 then 
+			TSMAvgMaxRetrace = tdraw / ndraw
+		else
+			TSMAvgMaxRetrace = 0;

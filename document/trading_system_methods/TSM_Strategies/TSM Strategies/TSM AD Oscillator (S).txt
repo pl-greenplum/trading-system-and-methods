@@ -1,0 +1,41 @@
+[LegacyColorValue = true]; 
+
+{ TSM AD Oscillator
+  Copyright 2011 P J Kaufman. All rights reserved. }
+
+{ smooth = exponential smoothing of oscillator
+}
+  input: smooth(.30), sellband(.70), buyband(.30), combine(1), 
+  			investment(100000), entryrule(0), exitrule(0);
+  vars:	size(0), ADosc(0), smoothedADosc(0);
+
+ size = investment/(AvgTrueRange(20)*bigpointvalue);
+ ADosc = TSMADOscillator(open,high,low,close,combine);
+ If Currentbar = 1 then smoothedADosc = ADosc;
+
+	If entryrule = 1 then begin
+		If adosc > sellband then sell short size contracts next bar at market
+			Else if adosc < buyband then buy size contracts next bar at market;
+		end;
+		
+	If entryrule = 2 then begin
+		smoothedADosc = smoothedADosc[1] + smooth*(ADosc - smoothedADosc);
+		If smoothedADosc > sellband then sell short size contracts next bar at market
+			Else if smoothedADosc < buyband then buy size contracts next bar at market;
+		end;
+	
+	If exitrule = 1 and marketposition <> 0 then begin
+		If Marketposition > 0 then sell all contracts this bar on close
+			Else if Marketposition < 0 then buy to cover all contracts this bar on close;
+		end;
+
+		
+	If exitrule = 2 and marketposition <> 0 then begin
+		If Marketposition > 0 and ADosc > 0 then sell all contracts next bar at market
+			Else if Marketposition < 0 and ADosc < 0 then buy to cover all contracts next bar at market;
+		end;
+	
+		
+
+	
+			

@@ -1,0 +1,48 @@
+[LegacyColorValue = true]; 
+
+{ TSM Save seasonal  (monthly) data
+  Copyright 1999,2012 P.J. Kaufman. All rights reserved. }
+
+{  Writes an ASCII file with name "c:\test\seasonal.txt" that needs to be renamed with the market/stock name }
+	vars:		cmonth(0), pmonth(0), ix(0), k(0);
+	array:	months[12](0);
+
+	if currentbar = 1 then begin
+{  Writes an ASCII file with a name created from the data series }
+		print(File("c:\TSM5\seasonal_average.csv"),"Year,Jan,Feb,Mar,Apr,May,Jun,Jul,Aug,Sep,Oct,Nov,Dec");
+		for ix = 1 to 12 begin
+			months[ix] = 0;
+			end;
+		k = 0;
+		end;
+	cmonth = month(date);
+	pmonth = month(date[1]);
+	if cmonth <> pmonth and currentbar > 1 then begin
+		months[pmonth] = months[pmonth] / k;
+{ if end of year then print and clear arrays }
+		if pmonth = 12 then begin
+    			 print(File("c:\TSM5\seasonal_average.csv"),year(date[1])+1900:4:0,",",months[1]:6:3,",",months[2]:6:3,",",
+				months[3]:6:3,",",months[4]:6:3,",",months[5]:6:3,",",months[6]:6:3,",",months[7]:6:3,",",months[8]:6:3,",",
+				months[9]:6:3,",",months[10]:6:3,",",months[11]:6:3,",",months[12]:6:3);
+			for ix = 1 to 12 begin
+				months[ix] = 0;
+				end;
+			end;
+{ new month begins }
+		k = 0;
+		end;
+	months[cmonth] = months[cmonth] + close;
+	k = k + 1;
+
+{ if end of data output final records }
+	if lastbaronchart and cmonth = pmonth then begin
+			months[cmonth] = months[cmonth] / k;
+    			 print(File("c:\TSM5\seasonal_average.csv"),year(date[1])+1900:4:0,",",months[1]:6:3,",",months[2]:6:3,",",
+				months[3]:6:3,",",months[4]:6:3,",",months[5]:6:3,",",months[6]:6:3,",",months[7]:6:3,",",months[8]:6:3,",",
+				months[9]:6:3,",",months[10]:6:3,",",months[11]:6:3,",",months[12]:6:3);
+	
+		end;
+
+
+
+

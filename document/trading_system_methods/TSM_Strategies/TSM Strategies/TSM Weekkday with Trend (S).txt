@@ -1,0 +1,118 @@
+[LegacyColorValue = true]; 
+
+{Weekday with Trend }
+{ Copyright 1985-1999, 2011. PJ Kaufman. All rights reserved. }
+
+	input: period(60);
+
+	vars:		dow(0), dir(0), ix(0),iy(0), error(0), Mon(0), day2(0), day3(0), day4(0),
+				day5(0), div(0), pc(0), trend(0), trendOK(true);
+	arrays:	Tues[2](0), Wed[4](0), Thurs[8](0), Fri[16](0), pattern[5](0),
+				n2[2](0), n3[4](0), n4[8](0), n5[16](0);
+
+{ create full pattern for week before entered values in case incomplete }
+	dow = dayofweek(date);
+
+	if currentbar = 1 then begin
+		Tues[1] = 10;  Tues[2] = 11;
+		Wed[1] = 101;  Wed[2] = 100;  Wed[3] = 111;  Wed[4] = 110;
+		Thurs[1] = 1011; Thurs[2] = 1010; Thurs[3] = 1001; Thurs[4] = 1000;
+		Thurs[5] = 1111; Thurs[6] = 1110; Thurs[7] = 1101; Thurs[8] = 1100;
+		Fri[1] = 10111; Fri[2] = 10110; Fri[3] = 10101; Fri[4] = 10100;
+		Fri[5] = 10011; Fri[6] = 10010; Fri[7] = 10001; Fri[8] = 10000;
+		Fri[9] = 11111; Fri[10] = 11110; Fri[11] = 11101; Fri[12] = 11100;
+		Fri[13] = 11011; Fri[14] = 11010; Fri[15] = 11001; Fri[16] = 11000;
+		end;
+
+	trend = average(close,period);
+
+{ Monday }
+	if dow = 1 then begin
+		for ix = 1 to 5 begin
+			pattern[ix] = 0;
+			end;
+{ only patterns that open in the direction of the trend }
+		trendOK = false;
+		if (trend > trend[1] and close > close[1]) or
+			(trend < trend[1] and close < close[1]) then trendOK = true;
+			
+		if trendOK and close > close[1] then pattern[1] = 1 else pattern[1] = -1;
+		end;
+{ Tuesday }
+	if dow = 2 then begin
+		if trendOK and close > close[1] then pattern[2] = 1 else pattern[2] = -1;
+		end;
+{ Wednesday }
+	if dow = 3 then begin
+		if trendOK and close > close[1] then pattern[3] = 1 else pattern[3] = -1;
+		end;
+{ Thursday }
+	if dow = 4 then begin
+		if trendOK and close > close[1] then pattern[4] = 1 else pattern[4] = -1;
+		end;
+{ Friday }
+	if trendOK and dow = 5 then begin
+		if close > close[1] then pattern[5] = 1 else pattern[5] = -1;
+		error = 0;
+{ process pattern for entire week, convert to pattern beginning with 1 }
+{		print (pattern[1]:3:3, pattern[2]:3:3, pattern[3]:3:3, pattern[4]:3:3, pattern[5]:3:3); }
+		for ix = 2 to 5 begin
+			if pattern[ix] = 0 then error = 1;
+			if error = 0 then begin
+				if pattern[ix] * pattern[1] > 0 then pattern[ix] = 1 else pattern[ix] = 0;
+				end;
+			end;
+		pattern[1] = 1;
+{		print (pattern[1]:3:0, pattern[2]:3:0, pattern[3]:3:0, pattern[4]:3:0, pattern[5]:3:0); }
+		if error = 0 then begin
+{ create a value for each day }
+			Mon = Mon + 1;
+			day2 = 10 + pattern[2];
+			day3 = 100 + pattern[2]*10 + pattern[3];
+			day4 = 1000 + pattern[2]*100 + pattern[3]*10 + pattern[4];
+			day5 = 10000 + pattern[2]*1000 + pattern[3]*100 +
+					pattern[4]*10 + pattern[5];
+{ match each pattern and add to number of cases }
+			if day2 = Tues[1] then n2[1] = n2[1] + 1 else n2[2] = n2[2] + 1;
+			for ix = 1 to 4 begin
+				if day3 = Wed[ix] then n3[ix] = n3[ix] + 1;
+				end;
+			for ix = 1 to 8 begin
+				if day4 = Thurs[ix] then n4[ix] = n4[ix] + 1;
+				end;
+			for ix = 1 to 16 begin
+				if day5 = Fri[ix] then n5[ix] = n5[ix] + 1;
+				end;
+			end;
+{		print (pattern[1]:3:0, pattern[2]:3:0, pattern[3]:3:0, pattern[4]:3:0, pattern[5]:3:0, 
+				Mon:4:0, day2:3:0, day3:4:0, day4:5:0, day5:6:0);   }
+		end;
+
+	if lastbaronchart then begin
+		print (file("c:\TSM5\Weekday_with_trend.csv")," Monday =, 1, 100%, cases =,", mon:5:0);
+		
+		print (file("c:\TSM5\Weekday_with_trend.csv"),"Tuesday");
+		for ix = 1 to 2 begin
+			div = intportion((ix+1)/2);
+			pc = n2[ix]*100/Mon;
+			print (file("c:\TSM5\Weekday_with_trend.csv"),Tues[ix]:5:0, ",", n2[ix]:4:0, ",", pc:4:0);
+			end;
+		print (file("c:\TSM5\Weekday_with_trend.csv"),"Wednesday");
+		for ix = 1 to 4 begin
+			div = intportion((ix+1)/2);
+			pc = n3[ix]*100/n2[div];
+			print (file("c:\TSM5\Weekday_with_trend.csv"),Wed[ix]:5:0, ",", n3[ix]:4:0, ",", pc:4:0);
+			end;
+		print (file("c:\TSM5\Weekday_with_trend.csv"),"Thursday");
+		for ix = 1 to 8 begin
+			div = intportion((ix+1)/2);
+			pc = n4[ix]*100/n3[div];
+			print (file("c:\TSM5\Weekday_with_trend.csv"),Thurs[ix]:5:0, ",", n4[ix]:4:0, ",", pc:4:0);
+			end;
+		print (file("c:\TSM5\Weekday_with_trend.csv"),"Friday");
+		for ix = 1 to 16 begin
+			div = intportion((ix+1)/2);
+			pc = n5[ix]*100/n4[div];
+			print (file("c:\TSM5\Weekday_with_trend.csv"),Fri[ix]:5:0, ",", n5[ix]:4:0, ",", pc:4:0);
+			end;
+		end;

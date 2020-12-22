@@ -1,0 +1,72 @@
+[LegacyColorValue = true]; 
+
+{ TSM Anti-Martingales with Trend
+  Copyright 2011 P J Kaufman. All rights reserved. }
+
+{ period = length of trend }
+  input: period(60), cap(8);
+  vars:	printPL(true), size(1), investment(25000), ATRper(20), 
+  			equity(0), atrange(0), trend(0), totalsize(0);
+  			
+  	If Currentbar = 1 then equity = investment;
+
+{	atrange = avgtruerange(ATRper)*bigpointvalue;
+	if atrange = 0 or equity = 0 then 
+			size = 1
+		else
+			size = equity/atrange; }
+			
+  	trend = average(close,period);
+  	
+{ long sequences }  	
+  	if trend > trend[1] then begin
+  		if marketposition <= 0 then begin
+	  			buy to cover all contracts this bar on close;
+{ start sequence }
+ 	 			buy size contracts this bar on close;
+ 	 			totalsize = size;
+ 	 			end
+{ add if profitable } 	 			
+  			else if marketposition = 1 and close > close[1] then begin
+  				if cap = 0 or totalsize < cap then totalsize = totalsize + totalsize;
+  				buy totalsize contracts this bar on close;
+  				end
+{ when price move negatively, reset to original size }  				
+  			else if marketposition = 1 and close < close[1] {and totalsize > size} then begin
+  				sell totalsize - size contracts this bar on close;
+{  				buy size contracts this bar on close; }
+  				totalsize = size;
+  			end;
+  		end;
+  			
+{ long sequences }  	
+  	if trend < trend[1] then begin
+  		if marketposition >= 0 then begin
+  				sell all contracts this bar on close;
+{ start sequence }
+  				sell short size contracts this bar on close;
+  				totalsize = size;
+  				end
+{ add if profitable }  				
+  			else if marketposition = -1 and close < close[1] then begin
+  				if cap = 0 or totalsize < cap then totalsize = totalsize + totalsize;
+  				sell short totalsize contracts this bar on close;
+  				end
+{ when price move profitably, reset to original size }  				
+  			else if marketposition = -1 and close > close[1] {and totalsize > size} then begin
+{  				buy to cover all contracts this bar on close; 
+  				sell short size contracts this bar on close; }
+  				buy to cover totalsize - size contracts this bar on close;
+  				totalsize = size;
+  			end;
+  		end;
+    	
+  	equity = equity + marketposition*totalsize[1]*(Close - close[1])*bigpointvalue;
+  	
+  	If printPL then begin
+  		If Currentbar = 1 then print(file("c:\TSM5\Anti-Martingaleswithtrend.csv"),
+  				 "Date,close,trend,size,netPL,Equity");
+  		print(file("c:\TSM5\Anti-Martingaleswithtrend.csv"),date:8:0, ",", close:6:5, ",", 
+  						trend:6:5, ",", marketposition*totalsize:8:3, ",", 
+  						netprofit + openpositionprofit:5:5, ",", equity:8:4);
+		end;

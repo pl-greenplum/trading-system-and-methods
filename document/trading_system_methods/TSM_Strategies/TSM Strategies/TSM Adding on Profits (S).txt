@@ -1,0 +1,67 @@
+[LegacyColorValue = true]; 
+
+{ TSM Adding on Profits using a moving average strategy
+	This version for stocks
+  Copyright 2011 P J Kaufman. All rights reserved. }
+
+{ period = length of calculaton
+  maxposition = maximum shares or contracts
+  compoundingmethod = compounding method, 
+  				1 adding equal on new highs, n days apart
+  				2, adding 1/2 on new highs, n days apart
+}
+  input: period(80), startpos(100), maxadds(5), addamount(10), daysbetween(1), compoundingmethod(1);
+  vars:	signal(0), trend(0), newtrend(0), equity(0), excess(0), size(0), maxprofit(0), nadds(0),
+  			lastadd(0);
+  			
+  	If Currentbar = 1 then equity = 0;
+
+	trend = average(close,period);
+	if trend > trend[1] then signal = 1
+		else if trend < trend[1] then signal = -1;
+		
+	if signal <> signal[1] then begin
+			newtrend = signal;
+			if newtrend > 0 then begin
+				if marketposition < 0 then buy to cover all shares this bar on close;
+				buy ("new_long") startpos shares this bar on close;
+				maxprofit = 0;
+				nadds = 1;
+				lastadd = currentbar;
+				size = startpos;
+				end
+			else if newtrend < 0 then begin
+				if marketposition > 0 then sell all shares this bar on close;
+				sell short ("new_short") startpos shares this bar on close;
+				maxprofit = 0;
+				nadds = 1;
+				lastadd = currentbar;
+				size = startpos;
+			end;
+			end
+		else newtrend = 0;
+	
+	if marketposition <> 0 then begin
+		maxprofit = maxlist(maxprofit,openpositionprofit);
+		if newtrend = 0 and nadds < maxadds and maxprofit > maxprofit[currentbar-lastadd] and
+				currentbar - lastadd >= daysbetween then begin
+			if compoundingmethod = 2 then size = size/2.;
+			if signal > 0 then begin
+					buy ("next_long") size shares this bar on close;
+					lastadd = currentbar;
+					end
+				else if signal < 0 then begin
+					sell short ("next_short") size shares this bar on close;
+					lastadd = currentbar;
+				end;
+			end;
+		end;
+ 	
+  	equity = equity + marketposition*currentcontracts*(Close - close[1])*bigpointvalue;
+  	
+  	If Currentbar = 1 then print(file("c:\TSM5\Adding_on_Profits.csv"), 
+  					"Date,trend,new,pos,curpos,nadds,lastadd,netPL,maxPL,newsize,Equity,ChgEq");
+  	print(file("c:\TSM5\Adding_on_Profits.csv"),date:8:0, ",", trend:6:4, ",", newtrend:3:0, ",", 
+  					marketposition:3:0, ",", currentshares:8:3, ",", nadds:5:0, ",", lastadd:5:0, ",", 
+  					netprofit + openpositionprofit:5:5, ",", maxprofit:8:2, ",", size:8:2, ",", equity:8:4, ",", 
+  					equity-equity[1]:8:4);

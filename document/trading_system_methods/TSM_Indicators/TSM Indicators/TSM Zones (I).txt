@@ -1,0 +1,26 @@
+[LegacyColorValue = true]; 
+
+{ TSM Zones : Intraday trading zones
+  Copyright 1999, P.J.Kaufman. All rights reserved.
+  Based on J. T. Jackson, "Detecting High Profit Day Trades In The Futures Markets"
+  (Windsor Books, 1994)
+
+  NOTE: There are 6 zones separated by 5 lines; however, the center lines
+	has been omitted due to the TradeStation limit of 4 plots }
+
+	inputs: length(1);
+	vars:	high2(0), high1(0), avg(0), low1(0), low2(0), avghlc(0),
+		top(0), bot(0);
+
+	avghlc = (high + low + close) / 3.;
+	avg = average(avghlc,length);
+	top = highest(high,length);
+	bot = lowest(low,length);
+	high2 = avg + top - bot;
+	high1 = 2*avg - bot;
+	low1 = 2*avg - top;
+	low2 = avg + bot - top;
+	plot1(high2,"TSMhigh2");
+	plot2(high1,"TSMhigh1");
+	plot3(low1,"TSMlow1");
+	plot4(low2,"TSMlow2");

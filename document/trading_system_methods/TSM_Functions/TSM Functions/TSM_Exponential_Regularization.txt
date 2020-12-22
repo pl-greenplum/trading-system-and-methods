@@ -1,0 +1,16 @@
+{ TSM_Exponential_Regualarization }
+
+inputs: 
+	Price(numericseries), 
+	Length(numericsimple), { this input assumed to be a constant >= 1 }
+	Lambda (numericsimple); {usually the same as length}
+
+variables: 
+	Alpha( 2 / ( Length + 1 ) ), RegEMA(0) ;
+
+if CurrentBar < 4 then
+	TSM_Exponential_Regularization = Price
+else
+	RegEMA = TSM_Exponential_Regularization[1];
+	RegEMA = (RegEMA[1]*(1 + 2*lambda) + alpha*(close -  regEMA[1]) -  lambda*(regEMA[2]))/(1 + lambda);
+	TSM_Exponential_Regularization = RegEMA;

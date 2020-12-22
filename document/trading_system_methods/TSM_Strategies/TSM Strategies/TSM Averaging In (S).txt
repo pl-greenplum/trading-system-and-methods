@@ -1,0 +1,53 @@
+[LegacyColorValue = true]; 
+
+{ TSM Averaging In : Moving average system with averaging in
+  Copyright 1994-1999,2011 P J Kaufman. All rights reserved. }
+
+{ period = length of calculaton
+  nentries = number of entries
+  daysbetweenentries = days between entry points
+}
+  input: period(80), maxsize(5), daysbetweenentries(1);
+  vars:	signal(0), contractsheld(0), trend(0), newtrend(0), equity(0),
+  			lastentrybar(0), prevcontracts(0);
+  			
+  	If Currentbar = 1 then equity = 0;
+
+	trend = average(close,period);
+	if trend > trend[1] then signal = 1
+		else if trend < trend[1] then signal = -1;
+		
+	if signal <> signal[1] then begin
+			newtrend = signal;
+			if newtrend > 0 then begin
+				if marketposition < 0 then buy to cover all contracts this bar on close;
+				buy ("new_long") 1 contract this bar on close;
+				lastentrybar = currentbar;
+				end
+			else if newtrend < 0 then begin
+				if marketposition > 0 then sell all contracts this bar on close;
+				sell short ("new_short") 1 contract this bar on close;
+				lastentrybar = currentbar;
+			end;
+			end
+		else newtrend = 0;
+	
+	if newtrend = 0 and currentcontracts < maxsize and currentbar >= lastentrybar + daysbetweenentries then begin
+		if signal > 0 then begin
+				buy ("next_long") 1 contract this bar on close;
+				lastentrybar = currentbar;
+				end
+			else if signal < 0 then begin
+				sell short ("next_short") 1 contract this bar on close;
+				lastentrybar = currentbar;
+			end;
+		end;
+ 	
+  	equity = equity + marketposition*prevcontracts*(Close - close[1])*bigpointvalue;
+  	prevcontracts = currentcontracts;
+  	
+  	If Currentbar = 1 then print(file("c:\TSM5\AveragingIn_PL.csv"), 
+  					"Date,trend,new,pos,size,lentbar,netPL,Equity,ChgEq");
+  	print(file("c:\TSM5\AveragingIn_PL.csv"),date:8:0, ",", trend:6:4, ",", newtrend:3:0, ",", 
+  					marketposition:3:0, ",", currentcontracts:8:3, ",", lastentrybar:8:0, ",", 
+  					netprofit + openpositionprofit:5:5, ",", equity:8:4, ",", equity-equity[1]:8:4);

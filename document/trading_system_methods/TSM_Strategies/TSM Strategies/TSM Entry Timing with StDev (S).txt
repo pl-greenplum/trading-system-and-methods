@@ -1,0 +1,45 @@
+{ TSM Entry Timing with Stdev 
+	Test combinations of entries based on moves outside stdev criteria 
+	Copyright 2011, P.J.Kaufman. All rights reserved. }
+
+	inputs:	period(20), stdevfactor(2.0), entryoption(1);
+	vars:		opendiff(0), highdiff(0), lowdiff(0), closediff(0), 
+				extremeopen(0), extremelow(0), extremehigh(0), extremeclose(0);
+
+	opendiff = open - close[1];
+	highdiff = high - close[1];
+	lowdiff = low - close[1];
+	closediff = close - close[1];
+
+	extremeopen = stddev(opendiff,period)*stdevfactor;
+	extremelow = stddev(lowdiff,period)*stdevfactor;
+	extremehigh = stddev(highdiff,period)*stdevfactor;
+	extremeclose = stddev(closediff,period)*stdevfactor;
+
+{ option 1: sell highs above extreme, buy lows below extreme }
+	if entryoption = 1 then begin
+			if closediff[1] < -extremeclose then buy ("BE1HL") next bar at close - extremelow limit;
+			if closediff[1] > extremeclose then sell short ("SE1HL") next bar at close + extremehigh limit;
+			end
+{ option 2: buy or sell open below or above extremes }
+		else if entryoption = 2 then begin
+			if closediff[1] < -extremeclose then buy ("BE2open") next bar at close - extremeopen limit;
+			if closediff[1] > extremeclose then sell short ("SE2open") next bar at close + extremeopen limit;
+			end
+{ option 3: buy or sell extreme close }
+		else if entryoption = 3 then begin
+			if closediff[1] < -extremeclose then buy ("BE3close") next bar at close - extremeclose limit;
+			if closediff[1] > extremeclose then sell short ("SE3close") next bar at close + extremeclose limit;
+		end;
+			
+	
+{ exit on close }
+	if entryoption <> 3 then begin
+			if marketposition < 0 then buy to cover this bar on close
+				else if marketposition > 0 then sell this bar on close;
+			end
+		else begin
+			if marketposition < 0 then buy to cover next bar on open
+				else if marketposition < 0 then sell next bar on open;
+		end;
+		

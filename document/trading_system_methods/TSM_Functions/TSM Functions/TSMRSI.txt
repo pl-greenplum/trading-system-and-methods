@@ -1,0 +1,34 @@
+[LegacyColorValue = true]; 
+
+{ TSMRSI : Wilder's Relative Strength Indicator
+  Copyright 1998-1999, P.J.Kaufman. All rights reserved.
+  }
+	input:	price(numericseries), period(numericsimple);
+	vars:	n(0), sumup(0), sumdn(0), avgup(0), avgdn(0), diff(0), ix(0), up(0), dn(0);
+
+{ initialization of sums and averages }
+	if currentbar = 1 then begin
+		n = period;
+		sumup = 0;
+		sumdn = 0;
+		for ix = 0 to n - 1 begin
+			diff = price[n] - price[n+1];
+			if diff > 0 then sumup = sumup + diff;
+			if diff < 0 then sumdn = sumdn + diff;
+			end;
+		avgup = sumup / n;
+		avgdn = sumdn / n;
+		end
+{ current day calculation only }
+	else if currentbar > 1 then begin
+		diff = price - price[1];
+		up = 0;
+		dn = 0;
+		if diff > 0 then up = diff;
+		if diff < 0 then dn = -diff;
+		avgup = (avgup[1] * (n - 1) + up) / n;
+		avgdn = (avgdn[1] * (n - 1) + dn) / n;
+		end;
+{ final index calculation }
+	TSMRSI = 0;
+	if avgup + avgdn <> 0 then TSMRSI = 100 * avgup / (avgup + avgdn);

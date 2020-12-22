@@ -1,0 +1,88 @@
+[LegacyColorValue = true]; 
+
+{ TSM Volatility Filters
+   Do not enter trades on high volatility and price in trend direction.
+   Exit on high volatility and price direction option.
+   Copyright 1994-1999,2012, P. J. Kaufman.  All rights reserved.
+
+   Rule 0 = No entry or exit filter
+   Rule 1 = Entry filter only when volatility is below the high (Efactor)
+			   Entry filter only when volatility is above the low (ELfactor)
+   Rule 2 = Exit filter only when volatility is above the high (Xfactor) 
+   Rule 3 = Exit filter only when volatility is above the high and price moves
+			   in a profitable direction (Xfactor)
+   Rule 4 = Exit filter only when volatility is above the high and price moves
+			   in a losing direction (Xfactor)
+   Rule 5 = Both entry and exit filters (options 1 and 2) }
+
+{ NOTE THAT CURRENT LOGIC DELAYS ENTRIES UNTIL VOLATILITY CONDITIONS
+  ARE SATISFIED. OTHER OPTIONS ARE CONTAINED IN THE BRACKETED STATEMENTS }
+
+  input:  rule(0), length(20), Efactor(99.0),ELfactor(.0), Xfactor(99.0);
+  vars:   vavg(0), vsd(0), lowlimit(0), Euplimit(0), Xuplimit(0), mavg(0),
+             aror(0), deltapl(0), totalpl(0), risk(0), ratio(0),
+             variance(0), change(0), ELuplimit(0);
+
+{ Volatility = average + standard deviation of price changes 
+   calculate average and sd before new prices }
+   change = AbsValue(close - close[1]);
+   vavg = Average(change[1],length);
+   vsd = StdDev(change[1],length);
+
+{ Extreme volatility limits }
+   lowlimit = vavg - vsd;
+   Euplimit = vavg + Efactor*vsd;
+   ELuplimit = vavg + ELfactor*vsd;
+   Xuplimit = vavg + Xfactor*vsd;
+
+{ System rules based on moving average trend }
+   mavg = average(close,length);
+
+{ Only enter on new trend signals below high volatility: Efilter
+   or new trend signals above low volatility: ELfilter }
+   if Rule=1 or Rule=5 then begin
+{ High volatility delay }
+{     if mavg>mavg[1] and marketposition <> 1 and change<Euplimit then begin }
+{ Low volatility filter }
+{     if mavg>mavg[1] and mavg[1]<=mavg[2] and change<Euplimit
+         and change>ELuplimit  then begin}
+{ Low volatility delay }
+      if mavg>mavg[1] and marketposition <> 1 and change<Euplimit
+         and change>ELuplimit  then Buy This Bar  on close;
+{ High volatility delay }
+{     if mavg<mavg[1] and marketposition <> -1 and change<Euplimit then begin }
+{ Low volatiltiy filter }
+{     if mavg<mavg[1] and mavg[1]>=mavg[2] and change<Euplimit
+          and change>ELuplimit  then begin }
+{ Low volatiltiy delay }
+      if mavg<mavg[1] and marketposition <> -1 and change<Euplimit
+          and change>ELuplimit then Sell Short This Bar  on close;
+      end;
+
+{ Normal entry only once in the same direction }
+   if rule<>1 and rule<>5 then begin
+      if mavg>mavg[1] and marketposition <> 1 then Buy This Bar  on close
+      	else if mavg<mavg[1] and marketposition <> -1 then Sell Short This Bar  on close;
+      end;
+
+{ Don't reenter after high volatility exit }
+   if rule>1 then begin
+      if mavg>mavg[1] and change<Xuplimit and marketposition <>1  then Buy This Bar  on close
+      	else if mavg<mavg[1] and change<Xuplimit and marketposition <> -1  then Sell Short This Bar  on close;
+      end;
+
+{ Exit without volatility }
+   if rule=0 or rule=1 then begin
+      if mavg<mavg[1] then Sell This Bar  on close
+       else if mavg>mavg[1] then Buy to Cover This Bar  on close;
+      end;
+{ Exit on high volatility and profitable direction}
+   if rule=2 or rule=3 then begin
+      if  mavg<mavg[1] or (close>close[1] and change>Xuplimit)  then Sell This Bar  on close
+      	else if  mavg>mavg[1] or (close<close[1] and change>Xuplimit)  then Buy to Cover This Bar  on close;
+      end;
+{ Exit on high volatility and not a profitable direction}
+   if rule=2 or rule=4 or rule=5 then begin
+      if  mavg<mavg[1] or (close<=close[1] and change>Xuplimit) then Sell This Bar  on close
+      	else if  mavg>mavg[1] or (close>=close[1] and change>Xuplimit) then Buy to Cover This Bar  on close;
+      end;

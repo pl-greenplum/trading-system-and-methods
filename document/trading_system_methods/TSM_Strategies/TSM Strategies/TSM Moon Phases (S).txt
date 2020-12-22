@@ -1,0 +1,35 @@
+[LegacyColorValue = true]; 
+
+{ TSM Moon Phases
+   Returns the mean phases of the moon, corrected for the sun's aberration 
+   Copyright 1996-1999, P J Kaufman. All rights reserved. }
+
+{ NOTE: Due to a decimal accuracy error in the transmission of a large decimal
+	number from the function "TSMJulianEDtoDate, the date of the full moon or
+	new moon may be off by one day. To avoid this problem, you may want to
+	incorporate the function code directly into this program. }
+
+	vars:	k(0), TT(0), n(0), ix(0), fullmoon(0), newmoon(0), nfm(130);
+	arrays: newdate[130](0), fulldate[130](0);
+
+	n = -nfm / 2;
+	if currentbar = 1 then begin
+		print(file("c:\test\moon.txt")," Event#   Date   Newmoon   Fullmoon  New date  Full date");
+		for ix = 1 to nfm begin
+{ newmoons relative to the year 2000 }
+			k = { 2000 } + n; 
+			TT = k / 1236.85; {time in Julian centuries }
+			fullmoon = 2451550.09765 + 29.530588853*k + 0.0001337*power(TT,2)
+				- 0.000000150*power(TT,3) + 0.00000000073*power(TT,4);
+{full moons relative to the year 2000 }
+			k = { 2000 } + n + .5; 
+			TT = k / 1236.85;
+			newmoon = 2451550.09765 + 29.530588853*k + 0.0001337*power(TT,2)
+				- 0.000000150*power(TT,3) + 0.00000000073*power(TT,4);
+			fulldate[ix] = TSMJulianEDtoDate(fullmoon);
+			newdate[ix] = TSMJulianEDtoDate(newmoon);
+			print (file("c:\test\moon.txt"),ix:5:0, k:8:0, fullmoon:10:0, newmoon:10:0,
+				fulldate[ix]:10:0, newdate[ix]:10:0);
+      	      n = n + 1;
+           		end;
+		end;

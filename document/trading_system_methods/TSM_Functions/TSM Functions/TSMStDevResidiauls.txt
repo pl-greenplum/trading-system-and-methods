@@ -1,0 +1,24 @@
+[LegacyColorValue = true]; 
+
+{TSM StDevResiduals: current value of residual compared to 1 standard deviation of residuals
+  Copyright 1996-1999, P J Kaufman. All rights reserved. }
+
+{	period	= the length of linear regression }
+
+	inputs:	period(numeric);
+	vars:	sumr(0), ix(0), sdr(0), resid(0), tresid(0);
+
+	sdr = 0;
+	if currentbar >= period then begin
+{ assumes that the average of detrended prices is zero }
+		resid = close - LinearRegValue(close,period,0);
+		sumr = 0;
+{ omit current value }
+		for ix = 1 to period begin
+			sumr = sumr + power(close[ix] - LinearRegValue(close,period,ix),2);
+			end;
+		tresid = close - LinearRegValue(close,period,0);
+		if sumr <> 0 then sdr = tresid / squareroot(sumr/period);
+		end;
+
+	TSMStDevResiduals = sdr;

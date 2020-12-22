@@ -1,0 +1,6 @@
+[LegacyColorValue = true]; 
+
+{ TSM Price Volume Trend : Price and Volume Trend
+  Copyright 1998-1999, PJ Kaufman. All rights reserved } 
+
+  plot1(TSMPriceVolumeTrend,"TSMPVT");

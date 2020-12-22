@@ -1,0 +1,34 @@
+[LegacyColorValue = true]; 
+
+{ TSMLinRegSlope :  Linear regression slope 
+  Copyright 1994-1999, P J Kaufman. All rights reserved.
+  Method of least squares to calculate slope }
+
+{ price = input series
+  period = length of calculation }
+
+  inputs: price(numericseries), period(numericsimple);
+  vars: sumx(0), sumx2(0), sumy(0), sumxy(0), n(0), k(0), top(0), bot(0), 
+        slope(0), yint(0);
+
+{  time = x, the independent variable, e.g., 1, 2, 3, ...
+   price = y, the dependent variable }
+
+{ standard sum of integer series }
+   sumx = period*(period + 1) / 2;
+   sumx2 = period*(period + 1)*(2*period + 1) / 6;
+   sumy = summation(price,period);
+   sumxy = 0;
+   n = period;
+   for k = 0 to period-1 begin
+        sumxy = sumxy + n*price[k];
+        n = n - 1;
+        end;
+   top = period*sumxy - sumx*sumy;
+   bot = period*sumx2 - sumx*sumx;
+   if bot <> 0 then 
+         slope = top / bot
+      else
+         slope = 0;
+{  yint = (sumy - slope*sumx) / period; }
+   TSMLinRegSlope = slope;

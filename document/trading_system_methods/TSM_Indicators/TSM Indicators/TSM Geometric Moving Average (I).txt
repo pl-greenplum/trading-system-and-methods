@@ -1,0 +1,15 @@
+{ TSM5 Geometric moving average
+  Copyright 2011, P.J.Kaufman.  All rights reserved. }
+
+	inputs: 	period(40);
+	vars:		geometric(0), prod(0), ix(0), fraction(0);
+	
+	Prod = 1;
+	For ix = 0 to period-1 begin
+		Prod = Prod*close[ix];
+		end;
+	
+	fraction = 1/period;
+	Geometric = power(prod,fraction);
+	
+	plot1(geometric,"GeoMA");

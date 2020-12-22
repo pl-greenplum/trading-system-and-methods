@@ -1,0 +1,92 @@
+[LegacyColorValue = true]; 
+
+{	TSMcurvilinear: 2nd order least squares
+	program returns only the current (last) value of the regression
+	Copyright 1999, P.J. Kaufman. All rights reserved.
+
+	n     number of input items
+	x     independent variable or zero if time series
+	y     dependent variable
+	printopt = 0, do not print to printlog; =1, print solutions to print log
+	aa    y-intercept
+	bb   coefficent of x
+	cc    coefficient of x^2
+	sd    standard deviation of residuals }
+
+	inputs: n(numericsimple), y(numericseries), x(numericseries), printopt(numericsimple);
+	vars:   aa(0), bb(0), cc(0), sd(0), avgx(0), avgx2(0), avgx3(0), avgx4(0), avgy(0),
+			avgxy(0), avgyx2(0), ix(0), tx(0), ty(0), ttime(0), tt(0);
+
+	aa = 0;
+	bb = 0;
+	cc = 0;
+	sd = 0;
+
+	if n > 4 then begin
+		avgx = 0;
+		avgx2 = 0;
+		avgx3 = 0;
+		avgx4 = 0;
+		avgy = 0;
+		avgxy = 0;
+		avgyx2 = 0;
+		ttime = 1;
+		for ix = 0 to n-1 begin
+			if x[ix] <> 0 then ttime = 0;
+			end;
+
+{ averages }
+		for ix = 0 to n-1 begin
+			if ttime = 0 then
+					tx = x[ix]
+				else
+					tx = ix;
+			avgx = avgx + tx;
+			avgx2 = avgx2 + tx*tx;
+			avgx3 = avgx3 + tx*tx*tx;
+			avgx4 = avgx4 + tx*tx*tx*tx;
+			ty = y[ix];
+			avgy  = avgy + ty;
+			avgxy = avgxy + ty*tx;
+			avgyx2 = avgyx2 + ty*tx*tx;
+			end;
+		if n <> 0 then begin
+			avgx  = avgx / n;
+			avgx2 = avgx2 / n;
+			avgx3 = avgx3 / n;
+			avgx4 = avgx4 / n;
+			avgy  = avgy / n;
+			avgxy = avgxy / n;
+			avgyx2 = avgyx2 / n;
+			end;
+
+{ 2nd order regression solution }
+		tt = 1*(avgx2*avgx4 - avgx3*avgx3) - 
+     			avgx*(avgx*avgx4 - avgx3*avgx2) +
+     				avgx2*(avgx*avgx3 - avgx2*avgx2);
+		if tt <> 0 then begin
+			aa = (avgy*(avgx2*avgx4 - avgx3*avgx3) +
+     				avgxy*(avgx3*avgx2 - avgx*avgx4) + 
+     					avgyx2*(avgx*avgx3 - avgx2*avgx2)) / tt;
+			bb = (avgy*(avgx3*avgx2 - avgx*avgx4) +
+     				avgxy*(1*avgx4 - avgx2*avgx2) +
+     					avgyx2*(avgx2*avgx - 1*avgx3)) / tt;
+			cc = (avgy*(avgx*avgx3 - avgx2*avgx2) +
+     				avgxy*(avgx*avgx2 - 1*avgx3) + 
+     					avgyx2*(1*avgx2 - avgx*avgx)) / tt;
+			end;
+
+{ standard deviation of residuals }
+	      sd = 0;
+	      for ix = 0 to n-1 begin
+			tx = x[ix];
+ 		      tt = y[ix] - (aa + bb*tx +cc*tx*tx);
+			sd = sd + tt*tt;
+			end;
+		sd = squareroot(sd/(n - 3));
+		ty = aa + bb*x[0] + cc*x[0]*x[0];
+		if printopt <> 0 then begin
+			print(date:6:0, x:5:3, ty:5:3, " a=", aa:5.3, " b=", bb:5:3, " c=", cc:5:3, " sd=", sd:5:3);
+			end;
+		end;
+	TSMcurvilinear =  ty;

@@ -1,0 +1,63 @@
+[LegacyColorValue = true]; 
+
+{ TSM Intraday volume
+   Copyright 1995-1999, 2011 P.J. Kaufman.  All rights reserved.
+
+   Produce a histrogram of frequency of average volume by time
+   Overlay with line chart of current volume  }
+
+   inputs:  period(10);
+   array:   timebar[200](0), volumebar[2500](0);
+   vars:    first(1), nbar(0), ndays(0), divisor(0), todaybar(0),
+   			thisbar(0), avgvolume(0), firstdate(0);
+
+	If Currentbar = 1 then 
+{			print (file("c:\TSM5\Intraday volume.csv"), 
+				"Date,time,Volume,ndays,loc,thisbar,found,ix,avgvolume"); }
+{ Test for first day }
+	If first <> 0 and nbar = 0 then begin
+			nbar = 1;
+			ndays = 1;
+			timebar[1] = time;
+			volumebar[1] = volume;
+			firstdate = date;
+			todaybar = 1;
+			first = 0;
+{			print (file("c:\TSM5\Intraday volume.csv"), "Day 1, bar, 1,", timebar[nbar]:5:0, ",", 
+					volumebar[nbar]:5:0); }
+			End
+		Else if Date = firstdate then begin
+			nbar = nbar + 1;
+			timebar[nbar] = time;
+			volumebar[nbar] = volume;
+			todaybar = nbar;
+{			print (file("c:\TSM5\Intraday volume.csv"), "2,", ndays:5:0, ",", nbar:5:0, ",", 
+					timebar[nbar]:5:0, ",", volumebar[nbar]:5:0); }
+			End;
+{ accumulate volume data in table in corresponding time slot }			
+	 if date <> date[1] then begin
+			ndays = ndays + 1;
+			todaybar = 1;
+			divisor = minlist(ndays-1,period);
+			if divisor<> 0 then volumebar[1] = volumebar[1] + volume/divisor - volumebar[1]/divisor;
+{			print (file("c:\TSM5\Intraday volume.csv"), "3,", ndays:5:0, ",", nbar:5:0, ",", 
+				timebar[todaybar]:5:0, ",", volumebar[todaybar]:5:0);}
+			end
+		Else if Date = date[1] then begin
+			todaybar = todaybar + 1;
+			divisor = minlist(ndays-1,period);
+			if divisor<> 0 then volumebar[todaybar] = volumebar[todaybar] + volume/divisor - volumebar[todaybar]/divisor;
+{			print (file("c:\TSM5\Intraday volume.csv"), "4,", ndays:5:0, ",", nbar:5:0, ",",
+					timebar[todaybar]:5:0, ",", volumebar[todaybar]:5:0);}
+		end;
+
+{ average volume for this bar }
+	if ndays > period then begin
+		plot1(volume,"vol");
+		plot2(volumebar[todaybar],"avgvol");
+		end;
+	
+	print (file("c:\TSM5\Intraday volume.csv"), "EOD,", date:8:0, ",", time:5:0, ",", volume:8:0, ",",
+		 ndays:5:0, ",", avgvolume:5:4);
+		
+	

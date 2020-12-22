@@ -1,0 +1,6 @@
+[LegacyColorValue = true]; 
+
+{ TSM Negative Volume Index : Negative Volume Index
+  Copyright 1998-1999, PJ Kaufman. All rights reserved } 
+
+  plot1(TSMNegVolumeIndex,"TSMPVI");

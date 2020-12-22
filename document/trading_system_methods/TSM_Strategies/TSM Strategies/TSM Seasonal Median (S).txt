@@ -1,0 +1,80 @@
+[LegacyColorValue = true]; 
+
+{ TSM Seasonal median (monthly)
+  Copyright 1999,2012 P.J. Kaufman. All rights reserved. }
+
+{  Writes an ASCII file with name "c:\test\seasonm.txt" that needs to be renamed with the
+   market/stock name. Median calculation embedded. }
+	vars:	cmonth(0), pmonth(0), ix(0), iy(0), k(0), save(0);
+	array: months[12](0), mdata[30](0), sort[30](0);
+
+	if currentbar = 1 then begin
+{  Writes an ASCII file with a name created from the mdata series }
+		print(File("c:\TSM5\seasonal_median.csv"),"Year,Jan,Feb,Mar,Apr,May,Jun,Jul,Aug,Sep,Oct,Nov,Dec");
+		for ix = 1 to 12 begin
+			months[ix] = 0;
+			end;
+		k = 0;
+		end;
+	cmonth = month(date);
+	pmonth = month(date[1]);
+	if cmonth <> pmonth and currentbar > 1 then begin
+		for ix = 1 to k begin
+			sort[ix-1] = mdata[ix];
+			end;
+		for ix = 0 to k-2 begin
+			for iy = 1 to k-1 begin
+				if sort[ix] > sort[iy] then begin
+					save = sort[ix];
+					sort[ix] = sort[iy];
+					sort[iy] = save;
+					end;
+				end;
+			end;
+		ix = intportion(k/2);
+		if Mod(k,2) = 1 then
+				months[pmonth] = sort[ix]
+			else
+				months[pmonth] = (sort[ix] + sort[ix-1]) / 2;
+{		print(" Median=",months[pmonth]:5:3); }
+
+{ if end of year then print and clear arrays }
+		if pmonth = 12 then begin
+    			 print(File("c:\TSM5\seasonal_median.csv"),year(date[1])+1900:4:0,",",months[1]:6:3,",",months[2]:6:3,",",
+				months[3]:6:3,",",months[4]:6:3,",",months[5]:6:3,",",months[6]:6:3,",",months[7]:6:3,",",months[8]:6:3,",",
+				months[9]:6:3,",",months[10]:6:3,",",months[11]:6:3,",",months[12]:6:3);
+			for ix = 1 to 12 begin
+				months[ix] = 0;
+				end;
+			end;
+{ new month begins }
+		k = 0;
+		end;
+{ collect mdata for median }
+	k = k + 1;
+	mdata[k] = close;
+{	print(" Add data: K=",k:2:0," mdata[k]=",mdata[k]:5:3); }
+{ if end of mdata output final records }
+	if lastbaronchart and cmonth = pmonth then begin
+		for ix = 1 to k begin
+			sort[ix-1] = mdata[ix];
+			end;
+		for ix = 0 to k-2 begin
+			for iy = 1 to k-1 begin
+				if sort[ix] > sort[iy] then begin
+					save = sort[ix];
+					sort[ix] = sort[iy];
+					sort[iy] = save;
+					end;
+				end;
+			end;
+		ix = intportion(k/2);
+		if Mod(k,2) = 1 then
+				months[cmonth] = sort[ix]
+			else
+				months[cmonth] = (sort[ix] + sort[ix-1]) / 2;
+
+    			print(File("c:\TSM5\seasonal_median.csv"),year(date[1])+1900:4:0,",",months[1]:6:3,",",months[2]:6:3,",",
+				months[3]:6:3,",",months[4]:6:3,",",months[5]:6:3,",",months[6]:6:3,",",months[7]:6:3,",",months[8]:6:3,",",
+				months[9]:6:3,",",months[10]:6:3,",",months[11]:6:3,",",months[12]:6:3);
+		end;

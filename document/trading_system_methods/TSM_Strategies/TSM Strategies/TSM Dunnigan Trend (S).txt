@@ -1,0 +1,10 @@
+{ TSM Dunnigan Trend
+	by Murray Ruggiero, "Dunnigan's Way," Futures, November 1998
+	Adapted by P.J.Kaufman. }
+	
+	inputs:	type(1);
+	
+	if marketposition <> 1 and TSM_Dunnigan_Trend(type) > 0 then
+			buy 1 contract next bar on open
+		else if marketposition <> -1 and TSM_Dunnigan_Trend(type) < 0 then
+			sell 1 contract next bar on open;

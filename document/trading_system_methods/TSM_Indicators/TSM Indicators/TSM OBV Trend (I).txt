@@ -1,0 +1,15 @@
+{ TSM OBV Trend
+  Copyright 2011, P.J.Kaufman. All rights reserved. }
+  
+  inputs: period(60);
+  vars:	OBVlocal(0), MAOBV(0);
+
+ 	if Close > Close[1] then 
+			OBVlocal = OBVlocal[1] + Volume 
+		else if Close < Close[1] then 
+			OBVlocal = OBVlocal[1] - Volume 
+		else 
+			OBVlocal = OBVlocal[1];
+  
+  MAOBV = average(OBVlocal,period);
+  Plot1(MAOBV,"MAOBV");

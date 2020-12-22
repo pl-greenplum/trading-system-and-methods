@@ -1,0 +1,53 @@
+[LegacyColorValue = true]; 
+
+{ TSM Seasonal (monthly) volatility
+  Copyright 1999,2012 P.J. Kaufman. All rights reserved. }
+
+{  Writes an ASCII file with name "c:\test\seasonv.txt" that needs to be renamed with the
+   market/stock name. }
+	vars: 	cmonth(0), pmonth(0), ix(0), top(0), bot(0);
+	array:	 months[12](0);
+
+	if currentbar = 1 then begin
+{  Writes an ASCII file with a name created from the data series }
+		print(File("c:\TSM5\seasonal_volatility.csv"),"Year,Jan,Feb,Mar,Apr,May,Jun,Jul,Aug,Sep,Oct,Nov,Dec");
+		for ix = 1 to 12 begin
+			months[ix] = 0;
+			end;
+		top = 0;
+		bot = 0;
+		end;
+	cmonth = month(date);
+	pmonth = month(date[1]);
+	if cmonth <> pmonth and currentbar > 1 then begin
+		months[pmonth] = top - bot;
+{ if end of year then print and clear arrays }
+		if pmonth = 12 then begin
+    			print(File("c:\TSM5\seasonal_volatility.csv"),year(date[1])+1900:4:0,",",months[1]:6:3,",",months[2]:6:3,",",
+				months[3]:6:3,",",months[4]:6:3,",",months[5]:6:3,",",months[6]:6:3,",",months[7]:6:3,",",months[8]:6:3,",",
+				months[9]:6:3,",",months[10]:6:3,",",months[11]:6:3,",",months[12]:6:3);
+			for ix = 1 to 12 begin
+				months[ix] = 0;
+				end;
+			end;
+{ new month begins }
+		top = 0;
+		bot = 0;
+		end;
+{ collect data for month }
+	if top = 0 and bot = 0 then begin
+			top = close;
+			bot = close;
+			end
+		else begin
+			if close > top then top = close;
+			if close < bot then bot = close;
+		end;
+
+{ if end of data output final records }
+	if lastbaronchart and cmonth = pmonth then begin
+			months[cmonth] = top - bot;
+    		print(File("c:\TSM5\seasonal_volatility.csv"),year(date[1])+1900:4:0,",",months[1]:6:3,",",months[2]:6:3,",",
+				months[3]:6:3,",",months[4]:6:3,",",months[5]:6:3,",",months[6]:6:3,",",months[7]:6:3,",",months[8]:6:3,",",
+				months[9]:6:3,",",months[10]:6:3,",",months[11]:6:3,",",months[12]:6:3);
+			end;

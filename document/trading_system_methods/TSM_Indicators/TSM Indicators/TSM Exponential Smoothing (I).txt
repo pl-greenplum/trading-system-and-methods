@@ -1,0 +1,11 @@
+{ TSM Exponential Smoothing
+  Copyright 2011, P.J.Kaufman. All rights reserved. }
+  
+  inputs:	smoothingconstant(0.10);
+  vars:		ESM(0);
+  
+  If Currentbar = 1 then ESM = close;
+  
+  ESM = ESM[1] + smoothingconstant*(Close - ESM[1]);
+  
+  plot1(ESM,"ExpSm");

@@ -1,0 +1,19 @@
+{	Ehlers' Hilbert Transform V2
+	Copyright 2000, John Ehlers. All rights reserved.
+	This aimplified version appeared in "Adaptive Trends and Oscillators," by John Ehlers,
+		Technical Analysis of Stocks & Commodities, May 2000 }
+
+	Inputs: 	price((H+L)/2); 
+
+	Vars:		inphase(0), quadrature(0);
+
+	if currentbar > 5 then begin
+		value1 = price - price[6];
+		value2 = value1[3];
+		value3 = .75*(value1 - value1[6]) + .25*(value1[2] - value1[4]);
+		inphase = .33*value2 + .67*inphase[1];
+		quadrature = .2*value3 + .8*quadrature[1];
+		
+		plot1(inphase,"Inphase");
+		plot2(quadrature,"Quadrature");
+		end;

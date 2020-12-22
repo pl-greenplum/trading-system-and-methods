@@ -1,0 +1,39 @@
+{ TSM Dynamic Breakout System
+	From Thomas Stridsman, "Revalation Trading"
+	Allows you to analyze when the peak profits and losses occurred.
+	Futures Magazine, February 1998
+	Modified by P.J.Kaufman. Copyright 2011. All rights reserved. }
+
+inputs:	period(30), maxvalue(60), minvalue(20);
+vars:		x(0), zdelta(0), varA(0), varB(0), signal(0),
+			oploss(0), opprofit(0), bottomday(0), peakday(0);
+			
+x = stddev(close,period);
+zdelta = (x - x[1])/x;
+if currentbar = 1 then varA = 20;
+varA = varA[1]*(1 + zdelta);
+varA = maxlist(varA,minvalue);
+varA = minlist(varA,maxvalue);
+VarB = VarA/2;
+
+Buy 1 contract next bar at highest(high,varA) stop;
+Sell short 1 contract next bar at lowest(low,varA) stop;
+
+if marketposition > 0 then sell all contracts next bar at lowest(low,varB) stop
+	else if marketposition < 0 then buy to cover all contracts next bar at highest(high,varB) stop;
+	
+oploss = maxpositionloss;
+opprofit = maxpositionprofit;
+if marketposition <> 0 then begin
+	if oploss < oploss[1] then bottomday = barssinceentry(0)
+		else if opprofit > opprofit[1] then peakday = barssinceentry(0);
+	end;
+	
+signal = marketposition;
+if currentbar = 1 then 
+	print(file("c:\TSM5\TSM_Dynamic_Breakout.csv"),"entrydate,pos,maxloss,bottomday,",
+		"maxprofit,peakday,netprofit,holdingtime");
+if signal[1] <> 0 and signal <> signal[1] then
+	print(file("c:\TSM5\TSM_Dynamic_Breakout.csv"),entrydate(1):8:0, ",", signal[1]:3:0, ",", maxpositionloss(1):6:2, ",",
+		bottomday:5:0 ,",", maxpositionprofit(1):6:2, ",", peakday:5:0, ",", positionprofit(1):6:2, ",", barssinceentry(1):3:0);
+ 

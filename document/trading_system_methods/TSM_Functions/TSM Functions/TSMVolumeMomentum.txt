@@ -1,0 +1,15 @@
+[LegacyColorValue = true]; 
+
+{ TSMVolumeMomentum% : Volume Momentum Indicator as a Percentage
+  Copyright 1998-1999, PJ Kaufman. All rights reserved
+  Creates a n-period momentum from volume  } 
+
+  inputs: n(numericsimple);
+  vars: period(0);
+
+  period = n;
+  if n = 0 then period = 1;
+  if volume[n] <> 0 then 
+		TSMVolumeMomentum = (volume - volume[period]) / volume[period]
+	else 
+		TSMVolumeMomentum = TSMVolumeMomentum[1];

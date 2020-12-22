@@ -1,0 +1,53 @@
+[LegacyColorValue = true]; 
+
+{ TSMSharpeRatio : Calculate Sharpe Ratio from equity stream
+   Copyright 1999, P.J.Kaufman. All rights reserved. }
+
+{ This program calculates the Sharpe Ratio of equity for the past
+	"period."  If "period" = 0 the entire series is used. The function 
+	must be called in the body of the system, but the final value of 
+	the Sharpe Ratio is available at the "lastcalcdate". Program
+	assumes 6 hour trading day for intraday data. }
+
+	inputs: equity(numericseries), period(numericsimple), currate(numeric),
+		invest(numeric);
+	vars: dtype(2), hrsday(6), AROR(0), inv(0),  years(0), length(0), div(0),
+			ix(0), sum2(0), std(0), n(0), sumeq(0), SR(0);
+
+	if currentbar = 1 then begin
+		length = period;
+		if length = 0 then length = currentbar;
+		inv = invest;
+		if invest = 0 then inv = maxiddrawdown;
+
+		dtype = datacompression;
+		print ("datacompr=",dtype:3:0);
+		if dtype = 2 then
+				div = 255
+			else if dtype = 3 then
+				div = 52
+			else if dtype = 4 then
+				div = 12
+			else if dtype = 1 then
+				div = 255 * 60 * hrsday / barinterval;
+		end;
+
+	sumeq = sumeq + equity;
+{ perform calculations only at designated intervals }
+	if mod(currentbar,div) = 0 then begin
+		n = n + 1;
+		sum2 = sum2 + power(equity - (sumeq / currentbar), 2);
+		if n <> 0 then std = squareroot(sum2) / n;
+{ calculate annualized returns }
+		if div <> 0 then years = currentbar / div;
+		if years <> 0 and inv > 0 then AROR = NetProfit / inv / years;
+
+		if inv <> 0 and std <> 0  and AROR <> 0 then
+				SR = (AROR - currate) / (std / inv)
+			else
+				SR = 0;
+		print (n:3:0, div:5:0, sum2:12:0, std:5:1, years:3:1, AROR:5:2,
+				SR:3:2);
+		end
+	else
+		TSMSharpeRatio = SR;

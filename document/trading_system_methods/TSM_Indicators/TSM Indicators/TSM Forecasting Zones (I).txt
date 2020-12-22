@@ -1,0 +1,19 @@
+{ TSM Forecasting Zones
+	From Tushar Chande and Stanley Kroll, "The New Technical Trader" (Wiley, 1994)
+	Copyright 2011, P.J.Kaufman. All rights reserved. }
+	
+	inputs:	period(10);
+	vars:		Avg(0), H1(0), H2(0), L1(0), L2(0), diff(0);
+	
+	diff = absvalue(close - close[1]);
+	Avg = average(diff,period);
+	
+	H2 = close[1] + 2*Avg;
+	H1 = close[1] + Avg;
+	L1 = close[1] - Avg;
+	L2 = close[1] - 2*Avg;
+	
+	plot1(H2,"H2");
+	plot2(H1,"H1");
+	plot3(L1,"L1");
+	plot4(L2,"L2");

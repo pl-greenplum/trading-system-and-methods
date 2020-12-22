@@ -1,0 +1,51 @@
+{ TSM Momentum Pinball
+	from Raschke and Conners, "Street Smarts"
+	Copyright 2003, 2011, P.J.Kaufman. All rights reserved. }
+	
+	vars:	tRSI(0), change(0), phigh(0), plow(0), thigh(0), tlow(0),
+			donefortheday(false), signal(0),
+			exitendofdayloss(true),
+			exitongoodopen(true);
+	
+	
+	change = close of data2 - close[1] of data2;
+	tRSI = RSI(change,3);
+
+{ test exits first }	
+	if marketposition > 0 then sell all contracts next bar at plow stop
+		else if marketposition < 0 then buy to cover all contracts next bar at phigh stop;
+		
+{ new day }	
+	if date <> date[1] then begin
+			phigh = thigh;
+			plow = tlow;
+			thigh = high;
+			tlow = low;
+			donefortheday = false;
+			if exitongoodopen then begin
+				if marketposition > 0 and open > close[1] then sell ("XLopen") all contracts this bar on close
+					else if marketposition < 0 and open < close[1] then buy to cover ("XSopen") all contracts this bar on close;
+				end;
+			end
+{ before 1st hour }			
+		else if time - sess1starttime <= 60 then begin
+			thigh = maxlist(thigh,high);
+			tlow = minlist(tlow,low);
+			end
+		else if time > sess1starttime  + 60 then begin
+			if signal <> 0 and marketposition = 0 then donefortheday = true;
+			if donefortheday = false then begin
+				if marketposition <= 0 and tRSI[1] < 30 then 
+							buy ("up bkout") 1 contract next bar at thigh + .0001 stop
+					else if marketposition >= 0 and tRSI[1] > 70 then 
+							sell short ("dn bkout") 1 contract next bar at tlow - .0001 stop;
+				end;
+		end;
+		
+	if exitendofdayloss and time = sess1endtime and marketposition <> 0 and contractprofit < 0 then begin
+		if marketposition > 0 then sell ("XLloss") all contracts this bar on close
+			else if marketposition < 0 then buy to cover ("XSloss") all contracts this bar on close;
+		end;
+		
+	signal = marketposition;
+

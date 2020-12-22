@@ -1,0 +1,19 @@
+{ TSM Dunnigan's One-Way Formula
+	from Murray Ruggiero, "Dunnigan's way," Futures, November 1998
+	Adapted by P.J.Kaufman. }
+	
+{ This version only takes long positions }
+
+	inputs: 	near(0.45), dist(6), maxdays(3);
+	vars:		topbot(0), signal(0);
+	
+	if marketposition = 0 then signal = 0;
+	
+{ looks for a bottom }
+	topbot = TSM_Dunnigan_DoubleTopBot(0,0,Near,Dist);
+	if (topbot = 1 or topbot[1] = 1) and close < open then buy next bar on open;
+
+	if barssinceentry > maxdays then begin
+		if marketposition > 0 then sell all contracts next bar on open
+			else if marketposition < 0 then buy to cover all contracts next bar on open;
+		end;

@@ -1,0 +1,14 @@
+[LegacyColorValue = true]; 
+
+{ TSMBlauDblSmoothing: Blau's Double smoothing of momentum
+  Copyright 1999, P.J.Kaufman. All rights reserved. }
+
+	input:	price(numericseries), Mlength(numericsimple), length1(numericsimple),
+			length2(numericsimple);
+	var:	mom(0), avg(0), Bavg(0);
+	
+	mom = price - price[Mlength];
+	if currentbar < Mlength then mom = 0;
+	avg = avg[1] + (2 / (length1 + 1)) * (mom - avg[1]);
+	Bavg = Bavg[1] + (2 / (length2 + 1)) * (avg - Bavg[1]);
+	TSMBlauDblSmoothing = Bavg;

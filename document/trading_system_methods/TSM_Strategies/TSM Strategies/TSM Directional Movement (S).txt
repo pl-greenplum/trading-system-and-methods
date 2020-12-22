@@ -1,0 +1,12 @@
+{ TSM Directional Movement System
+	Copyright 2011, P.J.Kaufman. All rights reserved. }
+	
+	inputs: 	period(14);
+	vars:		DM(0),PDMI(0),MDMI(0),DMIout(0),ADXout(0),ADXRout(0),Vlty(0);
+	
+	DM = DirMovement(high,low,close,period,PDMI,MDMI,DMIout,ADXout,ADXRout,Vlty);
+	
+	if PDMI crosses above MDMI then buy 1 contract next bar at high stop
+		else if PDMI crosses below MDMI then sell short 1 contract next bar at low stop;
+		
+		

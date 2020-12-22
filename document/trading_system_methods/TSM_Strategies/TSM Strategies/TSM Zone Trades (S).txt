@@ -1,0 +1,89 @@
+{ TSM Zone trades
+	Copyright 2011, P.J.Kaufman. All rights reserved }
+	
+{	tradetype	0= tomorrow open versus tomorrow close
+					1= today close versus following open }
+	
+	inputs:	tradetype(0), ATRperiod(10);	
+	vars: 	ATRhigh(0), ATRlow(0), zone(0), exitzone(0), ndays(0), ix(0), iy(0);
+	arrays:	pattern0[5](0), pattern1[5](0) ,pattern2[5](0), pattern3[5](0), 
+				pattern4[5](0), pattern5[5](0);
+	
+
+	ATRhigh = high + avgtruerange(ATRperiod);
+	ATRlow = low - avgtruerange(ATRperiod);
+
+{ type 0 can be done on same day }
+	if tradetype = 0 then begin
+		if open > ATRhigh[1] then zone = 5
+			else if open > high[1] then zone = 4
+			else if open > (high[1] + low[1])/2 then zone = 3
+			else if open > low[1] then zone = 2
+			else if open > ATRlow[1] then zone = 1
+			else zone = 0;
+		if close > ATRhigh[1] then exitzone = 5
+			else if close > high[1] then exitzone = 4
+			else if close > (high[1] + low[1])/2 then exitzone = 3
+			else if close > low[1] then exitzone = 2
+			else if close > ATRlow[1] then exitzone = 1
+			else zone = 0;
+		end;
+
+{ type 1 matches previous close with next open }	
+	if tradetype = 1 then begin
+		if close[1] > ATRhigh[1] then zone = 5 
+			else if close[1] > high[2] then zone = 4
+			else if close[1] > (high[2] + low[2])/2 then zone = 3
+			else if close[1] > low[2] then zone = 2
+			else if close[1] > ATRlow[2] then zone = 1
+			else zone = 0;
+		if open > ATRhigh[1] then exitzone = 5
+			else if open > high[1] then exitzone = 4
+			else if open > (high[1] + low[1])/2 then exitzone = 3
+			else if open > low[1] then exitzone = 2
+			else if open > ATRlow[1] then exitzone = 1
+			else exitzone = 0;
+		end;
+		
+{ Tabulate results }
+	ndays = ndays + 1;
+	if zone = 0 then pattern0[exitzone] = pattern0[exitzone] + 1
+		else if zone = 1 then pattern1[exitzone] = pattern1[exitzone] + 1
+		else if zone = 2 then pattern2[exitzone] = pattern2[exitzone] + 1
+		else if zone = 3 then pattern3[exitzone] = pattern3[exitzone] + 1
+		else if zone = 4 then pattern4[exitzone] = pattern4[exitzone] + 1
+		else if zone = 5 then pattern5[exitzone] = pattern5[exitzone] + 1;
+		
+{ end of run }
+	if lastbaronchart then begin
+		print(file("c:\TSM5\zonetradepatterns.csv"),"Zone,Pattern,Count,%Count");
+		for ix = 0 to 5 begin
+			for iy = 1 to 5 begin
+				if ix = 0 then begin
+						print(file("c:\TSM5\zonetradepatterns.csv"),ix:3:0, ",", iy:3:0, ",",
+								pattern0[iy]:5:0, ",", 100*pattern0[iy]/ndays:3:4);
+						end
+					else if ix = 1 then begin
+						print(file("c:\TSM5\zonetradepatterns.csv"),ix:3:0, ",", iy:3:0, ",",
+								pattern1[iy]:5:0, ",", 100*pattern1[iy]/ndays:3:4);
+						end
+					else if ix = 2 then begin
+						print(file("c:\TSM5\zonetradepatterns.csv"),ix:3:0, ",", iy:3:0, ",",
+								pattern2[iy]:5:0, ",", 100*pattern2[iy]/ndays:3:4);
+						end
+					else if ix = 3 then begin
+						print(file("c:\TSM5\zonetradepatterns.csv"),ix:3:0, ",", iy:3:0, ",",
+								pattern3[iy]:5:0, ",", 100*pattern3[iy]/ndays:3:4);
+						end
+					else if ix = 4 then begin
+						print(file("c:\TSM5\zonetradepatterns.csv"),ix:3:0, ",", iy:3:0, ",",
+								pattern4[iy]:5:0, ",", 100*pattern4[iy]/ndays:3:4);
+						end
+					else if ix = 5 then begin
+						print(file("c:\TSM5\zonetradepatterns.csv"),ix:3:0, ",", iy:3:0, ",",
+								pattern5[iy]:5:0, ",", 100*pattern5[iy]/ndays:3:4);
+					end;
+				end;
+			end;
+		end;
+							

@@ -1,0 +1,6 @@
+[LegacyColorValue = true]; 
+
+{ TSM Positive Volume Index : Positive Volume Index
+  Copyright 1998-1999, PJ Kaufman. All rights reserved } 
+
+  plot1(TSMPosVolumeIndex,"TSMPVI");

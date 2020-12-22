@@ -1,0 +1,21 @@
+[LegacyColorValue = true]; 
+
+{ Trading Systems and Methods: Moving average with Bollinger bands
+  Moving averge systems with entries using Bolllinger bands
+  Copyright 1999, P J Kaufman.  All rights reserved. }
+
+{ period = length of moving average
+   nsd = number of standard deviations for the Bollinger band
+  }
+	input:	period(20),nsd(2.0);
+	vars:	ma(0), band(0);
+
+{ Moving average trend }
+	ma  = average(close[1],period);
+	band = BollingerBand(close,period,nsd);
+
+{ long signal : close must penetrate upper band  }
+	if close  >  ma + band then Buy This Bar  on close;
+
+{ short signal : close must penentrate lower band }
+	if close < ma - band then Sell Short This Bar  on close;

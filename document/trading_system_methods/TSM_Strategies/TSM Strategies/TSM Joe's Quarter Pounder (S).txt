@@ -1,0 +1,22 @@
+{ TSM5 Joes Quarter Pounder
+	From Joe Krutzinger, The Trading Systems Toolkit 
+	Entering on a 3-day pattern but no exit. Use 1-day out. }
+	
+	vars:		size(0), investment(25000);
+	
+{ position size }
+	size = investment / (avgtruerange(30)*bigpointvalue);
+	size = maxlist(size,1);
+	
+	If Marketposition <> 0 and barssinceentry > 1 then begin
+		Sell this bar on close;
+		Buy to cover this bar on close;
+		end;
+		
+	If close[3] > open[3] and close[2] > open[2] and close[2] < close[3] then
+		Buy size contracts next bar at high[2] stop;
+		
+	If close[3] < open[3] and close[2] < open[2] and close[2] > close[3] then
+		Sell short size contracts next bar at low[2] stop;
+			
+			

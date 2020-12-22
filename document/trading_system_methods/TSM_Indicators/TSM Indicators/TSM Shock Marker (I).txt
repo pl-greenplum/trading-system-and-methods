@@ -1,0 +1,93 @@
+[LegacyColorValue = true]; 
+
+{  TSM Shock Marker : Mark price shocks on chart
+   Copyright 1996-1999, P.J.Kaufman.  All rights reserved.
+ 
+   PLOT INSTRUCTIONS:
+	1. Place plot in same window as price
+	2. Scale to price
+	3. Under "style" change all "lines" to "points" and
+		change the weight of the "line" to the third level
+
+   NOTE: If you want to plot the end of a price shock, remove
+		the braces towards the end of the program
+
+   vperiod = period of "normal" volatility measurement
+   minshk  = volatility increase which is recognized as a "shock" 
+   normfact = reduction to within factor of normal to end shock period }
+
+   input:       vperiod(50), minshk(3), normfact(1.25);
+   vars:        TR(0), vlty(0), shock(0), shockvlty(0), normal(0), ix(0), ndays(0), maxshk(0),
+                   vnorm(0), cumvlty(0), maxdays(3000), xper(1), xvlty(0), n(0), maxn(50), signal(0);
+   arrays:     dvlty[3000](0), shkfact[50](0), normvlty[50](0), sdate[50](0), stime[50](0),
+                    elapse[50](0), prev[50](0), sopen[50](0), sbegin[50](0), shigh[50](0), 
+                    slow[50](0);
+
+   TR = truehigh - truelow;
+   if shock = 0 and currentbar > 0 then begin
+{ volatility does not include today or periods inside shock }
+      vnorm = vnorm + TR[1];
+      if ndays < maxdays then begin
+         ndays = ndays + 1;
+         dvlty[ndays] = TR;
+         if ndays > 0 then cumvlty = vnorm/ndays;
+         vlty = 0;
+         if currentbar > vperiod + 2 then begin
+            for ix = ndays - vperiod to ndays - 1 begin
+                 vlty = vlty + dvlty[ix];
+                 end;
+            vlty = vlty / vperiod;
+            end;
+         end;
+      end;
+
+{ Test for a new shock }
+   if  currentbar > vperiod + 2 and vlty > 0 and TR >= vlty*minshk and
+       TR/vlty > maxshk and n < maxn then begin
+       n = n + 1;
+       shkfact[n] = TR / vlty;
+       normvlty[n] = vlty;
+       sdate[n] = date;
+       stime[n] = time;
+       elapse[n] = 0;
+       prev[n] = close[1];
+       sopen[n] = open;
+       sbegin[n] = close;
+       shigh[n] = close;
+       slow[n] = close;
+       maxshk = shkfact[n];
+       if n = 1 then begin
+		if close - close[1] > 0 then begin
+			signal = -1;
+			plot1(high*1.01,"TSMshockup");
+			end
+		else
+			signal = 1;
+			plot2(low*.99,"TSMshockdn");
+			end;
+       end;
+
+{ Test for end of shocks, all at same time }
+   if n > 0 and average(TR,xper) <= normvlty[1]*normfact then begin
+      for ix = 1 to n begin
+           elapse[ix] = elapse[ix] + 1;
+           if high > shigh[ix] then shigh[ix] = high;
+           if low < slow[ix] then slow[ix] = low;
+           end;
+      n = 0;
+      maxshk = 0;
+{ Remove braces to plot end of shock }
+{	if signal = 1 then plot3(high*1.01,"TSMendL");
+	if signal = -1 then plot4(low*.99,"TSMendS");  }
+	signal = 0;
+      end;
+
+{ If shocks still active, then update data }
+   if n > 0 then begin
+      for ix = 1 to n begin
+           elapse[ix] = elapse[ix] + 1;
+           if high > shigh[ix] then shigh[ix] = high;
+           if low < slow[ix] then slow[ix] = low;
+           end;
+      end;
+ 

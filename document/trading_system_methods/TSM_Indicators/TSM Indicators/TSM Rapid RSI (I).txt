@@ -1,0 +1,28 @@
+{ TSM Rapid RSI
+	from Ian Copsey, "Relative Spread Strength as a Long-Term Cycle Tool"
+	Technical Analysis of Stocks & Commodities, October 2006
+	P.J.Kaufman }
+	
+	Inputs:	length(14), overbought(70), oversold(30);
+	vars:		ix(0), RS(0), UpSum(0), downsum(0), CRS(0);
+	
+	upsum = 0;
+	downsum = 0;
+	for ix = 0 to length - 1 begin
+		if close[ix] > close[ix+1] then upsum = upsum + close[ix] - close[ix+1]
+			else if close[ix] < close[ix+1] then downsum = downsum + close[ix+1] - close[ix];
+		end;
+		
+	if downsum <> 0 then
+			RS = upsum/downsum
+		else
+			RS = 100;
+			
+	if upsum <> downsum then
+			CRS = 100 - 100/(1 + RS)
+		else
+			CRS = 0;
+		
+	plot1(CRS,"Rapid RSI");
+	plot2(Overbought,"Overbought");
+	plot3(Oversold,"Oversold");		

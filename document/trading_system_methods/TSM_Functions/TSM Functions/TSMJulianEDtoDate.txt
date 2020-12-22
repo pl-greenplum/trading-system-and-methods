@@ -1,0 +1,47 @@
+[LegacyColorValue = true]; 
+
+{ TSMJulianEDtoDate : Convert Julian Ephemeris Date to Calendar Date
+   Copyright 1999, P.J.Kaufman. All rights reserved.
+
+   This function converts the Julian Ephemeris Date, used to calculate the
+	moon and solar phases, and convert it to a standard calendar date
+	plus decimal days representing hours: YYYYMMDD.dd, where
+	YYYY is the tyear (e.g., 1999)
+	MM is the month
+	DD.dd is the day of month and hours (in decimal days)
+		(.50 means 12 o'clock noon) }
+
+	input:	Jdate(numeric);
+	vars:	zz(0), fract(0), aa(0), alpha(0), bb(0), cc(0), dd(0),
+			ee(0), daydec(0), mo(0), tyear(0), btemp(0), iday(0);
+
+	zz = intportion(Jdate + .5);
+	fract = Jdate + .5  - zz;
+	if zz < 2299161 then
+			aa = zz
+		else begin
+			alpha = intportion((zz - 1867216.25) / 36524.25);
+			aa = zz + 1 + alpha - intportion(alpha / 4);
+		end;
+	bb = aa + 1524;
+	btemp = (bb - 122.1) / 365.25;
+	cc = intportion(btemp);
+	dd = intportion(365.25*cc);
+	ee = intportion((bb - dd) / 30.6001);
+{	print (file("c:\TSM5\moon.txt"),zz:8:0, fract:5:2, " alpha=",alpha:6:0, 
+		" a=",aa:8:0, bb:8:0, " c=",cc:8:0, " d=", dd:8:0, " e=",ee:8:0); }
+	daydec = bb - dd - intportion(30.6001*ee) + fract;
+	if ee < 13.5 then
+			mo = ee - 1
+		else
+			mo = ee - 13;
+	if mo > 2.5 then
+			tyear = cc - 4716
+		else
+			tyear = cc - 4715;
+	print (file("c:\TSM5\moon.txt")," year=",tyear:5:0," mo=",mo:2:0,
+		" day=",daydec:3:2);
+{ Must round day due to TradeStation decimal accuracy }
+	iday = round(daydec,0);
+{	iday = intportion(daydec); }
+	TSMJulianEDtoDate = tyear * 10000 + mo * 100 + iday;

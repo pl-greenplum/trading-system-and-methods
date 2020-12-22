@@ -1,0 +1,21 @@
+[LegacyColorValue = true]; 
+
+{ TSMDemandIndex: Sibbett's Demand Index
+  Copyright 1998-1999, PJ Kaufman. All rights reserved } 
+
+  inputs: length(numericsimple);
+  vars: sumuP(0), sumdn(0), ix(0), diff(0), sum(0);
+
+  sumup = 0;
+  sumdn = 0;
+  for ix = 0 to length - 1 begin
+	diff = volume[ix] - volume[ix+1];
+      if diff > 0 then 
+    		sumup = sumup + diff
+      else 
+		sumdn = sumdn - diff;
+    	end;
+  TSMDemandIndex = 0;
+  
+  sum = Summation(sumdn,length);
+  if sum <> 0 then TSMDemandIndex = summation(sumup,length) /  sum;

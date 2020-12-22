@@ -1,0 +1,48 @@
+{ TSM VIX Mean Reverting Strategy
+	Based on MarketSci Blog 3/1/2011
+	Copyright 2011, P.J.Kaufman. All rights reserved. }
+	
+{	TradeOption	1 = long only
+					2 = short only
+					3 = both long and short }	
+
+inputs:	period(10), tradeoption(3), volfactor(0.0), reverse(false);
+vars:		EMA(0), SMA(0), sc(0), PL(0), longPL(0), shortPL(0), ATR(0);
+
+if currentbar < period then begin
+	EMA = close;
+	SMA = close;
+	sc = 2/(period + 1);
+	end;
+	
+EMA = EMA[1] + sc*(close - EMA[1]);
+SMA = average(close,period);
+ATR = avgtruerange(period);
+
+if truerange > ATR*volfactor then begin
+	if tradeoption <> 1 and ((reverse = false and EMA > SMA) or (reverse and EMA < SMA))
+				then sell short 1 contract this bar on close
+		else if tradeoption <> 2 and ((reverse = false and EMA < SMA) or (reverse and EMA > SMA))
+				then buy 1 contract this bar on close;
+	end;
+	
+if tradeoption = 1 and EMA > SMA then sell this bar on close
+	else if tradeoption = 2 and EMA < SMA then buy to cover this bar on close;
+	
+ PL = PL + marketposition*(Close - close[1])*bigpointvalue;
+ if marketposition = 1 then 
+ 		longPL = longPL + marketposition*(Close - close[1])*bigpointvalue
+ 	else
+ 		longPL = longPL[1];
+ 		
+ if marketposition = -1 then 
+ 		shortPL = shortPL + marketposition*(Close - close[1])*bigpointvalue
+ 	else
+ 		shortPL = shortPL[1];
+
+  	
+  If Currentbar = 1 then print(file("c:\TSM5\VIX_mean_reversion_PL.csv"),
+  				"Date,position,today,netPL,longPL,shortPL");
+  		print(file("c:\TSM5\VIX_mean_reversion_PL.csv"),date:8:0, ",",
+  				 marketposition:5:0, ",", netprofit + openpositionprofit:5:5, ",", 
+  				 PL:8:2, ",", longPL:8:2, ",", shortPL:8:2);

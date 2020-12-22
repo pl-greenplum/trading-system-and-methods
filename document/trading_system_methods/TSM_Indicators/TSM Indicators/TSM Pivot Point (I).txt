@@ -1,0 +1,21 @@
+{ TSM Pivot Point Indicator
+	Copyright 2011, P.J.Kaufman. All rights reserved. }
+	
+	inputs: period(3);
+	vars:		startday(0), ix(0),highpassed(false), lowpassed(false);
+	
+
+	startday = 2*period + 1;
+	
+{ test high pivot point }	
+	highpassed = false;
+	if high[period+1] >= highest(high,startday) then highpassed = true;
+	
+	If highpassed then plot1[period+1](high[period+1]*1.01,"high",red);
+ 		
+{ test low pivot point }
+	lowpassed = false;
+	If low[period+1] <= lowest(low,startday) then lowpassed = true;
+	
+	If lowpassed then plot2[period+1](low[period+1]*0.99,"low",blue);
+	

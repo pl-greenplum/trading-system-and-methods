@@ -1,0 +1,6 @@
+[LegacyColorValue = true]; 
+
+{ TSMDemandOsc: Aspray's Demand Oscillator
+  Copyright 1998-1999, PJ Kaufman. All rights reserved } 
+
+  plot1(TSMDemandOsc, "TSMDOsc");

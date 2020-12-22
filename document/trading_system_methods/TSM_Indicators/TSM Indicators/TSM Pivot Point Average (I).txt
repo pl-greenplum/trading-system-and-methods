@@ -1,0 +1,8 @@
+[LegacyColorValue = true]; 
+
+{ TSM Pivot Point Average : Linear weighting that allows oldest items to be negative
+  Copyright 1998-1999, PJ Kaufman. All rights reserved }
+
+	inputs :  length(20), startwgt(14);
+
+	plot1(TSMPivotPointAverage(close,length,startwgt),"TSMPPAvg");

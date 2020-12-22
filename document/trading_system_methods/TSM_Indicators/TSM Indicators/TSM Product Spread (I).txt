@@ -1,0 +1,27 @@
+[LegacyColorValue = true]; 
+
+{ TSM Product Spread : Energy or soybean product spread (crack and crush)
+   Copyright 1999, P.J.Kaufman. All rights reserved.
+
+   This program calculates the estimated gross profit of a refiner
+	who buys crude oil and sells products (gasoline and heating oil).
+
+   Inputs:	data1 is the price of crude oil or soybeans
+			data2 is the price of product 1 (gasoline or soybean oil)
+			data3 is the price of product 2 (heating oil or soybean meal)
+			units1 are the number of contracts of crude (CL=3)
+			units2 are the number of contracts of product1 (HU=2)
+			units3 are the number of contracts of product2 (HO=1)
+
+   NOTE: For a correct crack spread, use the one month deferred from crude oil
+			 for the products. The correct spread ratio is slightly more than 2 parts
+			of gasoline to one part of fuel oil; there are additional residual products. }
+
+	inputs:	units1(3), units2(2), units3(1);
+	vars:    spread(0);
+
+	spread = units2*close of data2*bigpointvalue of data2
+				 	+ units3*close of data3*bigpointvalue of data3
+				   - units1*close of data1*bigpointvalue of data1;
+
+	plot1(spread,"TSMprodsprd");

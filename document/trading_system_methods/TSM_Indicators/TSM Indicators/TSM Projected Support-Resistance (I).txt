@@ -1,0 +1,83 @@
+[LegacyColorValue = true]; 
+
+{ TSMProjSupport : Projected support trend line from swing lows
+  Copyright 1994-1999, P.J. Kaufman.  All rights reserved. 
+
+   Plot setup: 
+	1. Place on same graph window as price
+	2. Scale same as price
+	3. In style, set values to "point" with weight 2
+
+  Input for TSM SWING:
+     swing 	= price swing in whole % (e.g., 2% = 2.0)  }
+
+   input: swing(2.0);
+   vars:  pcswing(0), last(0), curhigh(0), curlow(0), swhigh(0), swlow(0) , 
+		highbar(0), lowbar(0), chighbar(0), clowbar(0), lowp(0), highp(0), 
+		divide(4), factor(1), par(800), pswhigh(0), phighbar(0), pswlow(0),
+		plowbar(0), slopesup(0), sloperes(0), support(0), resist(0);
+
+   pcswing = swing / 100.;
+
+{ INITIALIZE MOST RECENT HIGH AND LOW }
+  if currentbar = 1 then begin
+      curhigh = close;			{ current high }
+      curlow  = close;			{ current low }
+      end;
+                
+{ SEARCH FOR A NEW HIGH -- favor reversals }
+   if last<>1 then begin
+   { REVERSE FROM HIGH IF MINIMUM % SWING }
+      if low < curhigh - curhigh*pcswing then begin
+         last = 1;					{ last high fixed }
+	   pswhigh = swhigh;
+	   phighbar = highbar;
+         swhigh   = curhigh;		{ new verified high }
+         highbar   = chighbar;
+         curlow = low;			{ initialize new lows }
+         lowp = low;				{ swing low for plot }
+         clowbar = currentbar;
+         end
+      else begin
+      if high > curhigh then begin
+         curhigh = high;          { new current high }
+         chighbar = currentbar;
+         end;
+      end;
+   end;
+
+{ SEARCH FOR A NEW LOW - favor reversal }
+   if last <> -1 then begin
+{ REVERSAL FROM LOW IF MINIMUM % SWING }
+   if high > curlow + curlow*pcswing then begin
+      last = -1;
+	pswlow = swlow;
+	plowbar = lowbar;
+      swlow   = curlow;		{ new verified low }
+      lowbar   = clowbar;
+      curhigh = high;          { initialize current high }
+      highp = high;               { swing high for plot }
+      chighbar = currentbar;
+      end
+   else begin
+      if low < curlow then begin
+         curlow = low;
+         clowbar = currentbar;
+         end;
+      end;
+   end;
+
+{ project support line from (pswlow,plowbar) and (swlow,lowbar) }
+  if lowbar - plowbar > 0 then begin 
+	  slopesup = (swlow - pswlow) / (lowbar - plowbar);
+	  support = swlow + (currentbar - lowbar)*slopesup;
+{ plot support projection }
+  	plot1(support,"TSMsupport");
+	end;
+   if highbar - phighbar > 0 then begin
+{ project resistance line from (pswhigh,phighbar) and (swhigh,highbar) }
+	  sloperes = (swhigh - pswhigh) / (highbar - phighbar);
+	  resist = swhigh + (currentbar - highbar)*sloperes;
+{ plot resistance projection }
+	  plot2(resist,"TSMresist");
+	 end;

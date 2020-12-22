@@ -1,0 +1,12 @@
+[LegacyColorValue = true]; 
+
+{ TSMDeMark  Projected Ranges, pp. 383-384
+  Copyright 1998-1999, PJ Kaufman. All rights reserved }
+
+	vars:	TSMhigh(0), TSMlow(0);
+
+	TSMhigh = TSMDeMarkrangehigh(open,high,low,close);
+	TSMlow = TSMDeMarkrangelow(open,high,low,close);
+
+	plot1(TSMhigh,"TSMhigh");
+	plot2(TSMlow,"TSMlow");

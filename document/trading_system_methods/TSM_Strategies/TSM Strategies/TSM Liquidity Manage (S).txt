@@ -1,0 +1,44 @@
+[LegacyColorValue = true]; 
+
+{ TSM Liquidity Manage:  Vary contract size based on volume
+  Copyright 1995-1999, P.J. Kaufman.  All rights reserved.
+
+  Volume is used to scale down (or up) position size, using a moving average 
+	as the basis for the trading system. Use total volume (all contracts)
+
+  Inputs are:
+		"period,"	moving average and long volume calculation period
+		"vperiod"	short (numerator) volume calculation period < vperiod
+		"option,"	=1, scale down only; =2, scale up and down
+		"size"		the size of an initial position
+		"max"		the maximum multiplier for scaling (max = 2 then twice the size  }
+
+	inputs:  period(20), vperiod(3), rule(1), size(10), max(2);
+	vars: mavg(0), vavg1(0), vavg2(0), vratio(0), contr(0), signal(0), ncontr(0);
+
+	mavg = average(close,period);
+	vavg1 = average(volume,vperiod);
+	vavg2 = average(volume,period);
+	vratio = vavg1 / vavg2;
+
+	if signal < 1 and mavg > mavg[1] then begin
+			Buy to Cover This Bar  at close;
+			signal = 0;
+			if max > 0 and vratio > max then vratio = max;
+			ncontr = size * vratio;
+			if rule = 1 and ncontr > size then ncontr = size;
+			Buy This Bar  ncontr contracts at close;
+			signal = 1;
+			end
+		else if signal > -1 and mavg < mavg[1] then begin
+			Sell This Bar  at close;
+			signal = 0;
+			if max > 0 and vratio > max then vratio = max;
+			ncontr = size * vratio;
+			if rule = 1 and ncontr > size then ncontr = size;
+			Sell Short This Bar  ncontr contracts at close;
+			signal = -1;
+			end;
+
+    print (date:6:0, close:4:2, volume:8:0, vratio:3:1, signal:3:0, ncontr:3:0);
+ 

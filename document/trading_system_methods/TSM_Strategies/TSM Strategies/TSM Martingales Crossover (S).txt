@@ -1,0 +1,61 @@
+[LegacyColorValue = true]; 
+
+{ TSM Martingales crossover : Martingales betting method applied to
+	moving average crossover method
+  Copyright 1994-1999, 2011 P J Kaufman. All rights reserved. }
+
+{	This method increases the size of the contracts after each
+	loss (by "factor"), and starts again at the base "size" 
+	after each win. In classic Martingales, factor = 2.0. }
+
+{	length1 = length of moving average 1 (faster or slower)
+	length2 = length of moving average 2 (faster or slower)
+	size = initial contracts
+	factor = increase in number of contracts after loss
+	maxhold = maximum number of days in the trade }
+
+	input: slow(20), fast(5), size(2), factor(2.0);
+	vars:  mafast(0), maslow(0), ncontr(0), faster(0), slower(0),
+			posentry(0), signal(0);
+
+	mafast = average(close, fast);
+	maslow = average(close, slow);
+
+{ buy when faster is above slower }
+	if mafast > maslow then begin
+		if signal = -1 then begin
+			Buy to Cover This Bar  at close;
+			signal = 0;
+			if posentry - close < 0 then
+					ncontr = intportion(ncontr*factor)
+				else
+					ncontr = size;
+			end;
+		if signal < 1 then begin
+			Buy This Bar  ncontr contracts at close;
+			posentry = close;
+			signal = 1;
+			end;
+		end;
+	
+{ sell when faster is below slower }		
+	if mafast < maslow then begin
+		if signal = 1 then begin
+			Sell This Bar  at close;
+			signal = 0;
+			if close - posentry < 0 then
+					ncontr = intportion(ncontr*factor)
+				else
+					ncontr = size;
+			end;
+		if signal > -1 then begin
+			Sell Short This Bar  ncontr contracts at close;
+			posentry = close;
+			signal = -1;
+			end;
+		end;
+	
+	if currentbar = 1 then print(file("c:\TSM5\Martingales_crossover.csv"),"Date,NetPL,Position");
+	
+	print(file("c:\TSM5\Martingales_crossover.csv"),date:8:0, ",",
+				netprofit+openpositionprofit:8:2, ",", signal*ncontr:5:3);

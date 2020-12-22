@@ -1,0 +1,20 @@
+[LegacyColorValue = true]; 
+
+{ Kaufman's Adaptive Moving Average (KAMA) smoothing constant
+  Copyright 1990-2004,2011, P.J.Kaufman. All rights reserved }
+
+	inputs:	period(8), fastend(2), slowend(30);
+	vars:		efratio(0), smooth(0), diff(0), signal(0), noise(0), 
+				expfast(0), expslow(0);
+
+{ calculate efficiency ratio }
+	expfast = 2/(fastend + 1);
+	expslow = 2/(slowend + 1);
+	efratio = 1;
+	diff = absvalue(close - close[1]);
+	signal = absvalue(close - close[period]);
+	noise = summation(diff,period);
+	if noise <> 0 then efratio = signal / noise;
+	smooth = power(efratio*(expfast - expslow) + expslow,2);
+		
+	plot1 (smooth, "sc");

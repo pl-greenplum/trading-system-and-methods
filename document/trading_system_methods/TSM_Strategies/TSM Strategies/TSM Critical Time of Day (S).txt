@@ -1,0 +1,54 @@
+{ TSM5 Critical Time of Day
+	From Lars Kestner }
+	
+	inputs: 	multi(2), str(1), daysback(2);
+	vars:		size(0), yestdate(0), buypoint(99999), sellpoint(-99999),
+				investment(25000);
+	
+{ position size }
+	if multi = 1 then
+			size = investment/(stddev(close-close[1],30)*bigpointvalue)
+		Else if multi = 2 then
+			size = investment / (avgtruerange(30)*bigpointvalue)
+		else
+			size = 1;
+	size = maxlist(size,1);
+	
+{ new week, 1=Monday and no weekend holidays }	
+	If dayofweek(date) = 1 then begin
+{ if beginning of week then set triggers at high of Thurs-Fri }	
+		if yestdate = 5 then begin
+				buypoint = highest(high,daysback);
+				sellpoint = lowest(low,daysback);
+				End
+			Else begin
+				buypoint = 99999;
+				sellpoint = -99999;
+			end;
+		end;
+		
+{ buy or sell a breakout of last week's high or low }	
+	If Dayofweek(date) <> 5 then begin
+		Buy ("CTOD buy") size contracts next bar at buypoint stop;
+		Sell ("CTOD sell") size contracts next bar at sellpoint stop; 
+{		if High > buypoint then buy ("buy close") this bar on close;
+		If low < sellpoint then sell ("sell close") this bar on close;}
+		end;
+			
+{ Exit on Friday -- what if a holiday? }
+	If Marketposition <> 0 then begin
+		If dayofweek(date) = 5 then begin
+					Sell ("CTOD L-exit") this bar on close;
+					Buy to cover ("CTOD S-exit") this bar on close;
+				end
+			Else if yestdate > dayofweek(date) then begin
+					Sell ("XL holiday") this bar on close;
+					Buy to cover ("XS holiday") this bar on close;
+			end;
+{		If dayofweek(date) = 2 and openpositionprofit > 0 then begin
+					Sell ("XL Tuesday") this bar on close;
+					Buy to cover ("XS Tuesday") this bar on close;
+			end; }
+		end;
+			
+	yestdate = dayofweek(date);

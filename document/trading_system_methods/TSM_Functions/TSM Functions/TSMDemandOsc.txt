@@ -1,0 +1,22 @@
+[LegacyColorValue = true]; 
+
+{ TSMDemandOsc: Aspray's Demand Oscillator
+  Copyright 1998-1999, PJ Kaufman. All rights reserved } 
+
+	vars: BP(0), SP(0), k(0), pchg(0);
+
+	k = (3 * close) / (average((highest(high,2) - lowest(low,2)),10));
+	BP = BP[1];
+	SP = SP[1];
+	pchg = (close - close[1]) / close[1];
+	if k <> 0 and pchg <> 0 then begin
+		if close > close[1] then begin
+			BP= volume;
+			SP= volume / (k * pchg);
+			end;
+		if close < close[1] then begin
+			SP= volume;
+			BP= volume / (k * pchg);
+			end;
+		TSMDemandOsc = BP - SP;
+		end;

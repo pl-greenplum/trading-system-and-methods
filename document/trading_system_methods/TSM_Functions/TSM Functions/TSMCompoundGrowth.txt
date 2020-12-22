@@ -1,0 +1,10 @@
+[LegacyColorValue = true]; 
+
+{ TSMCompoundGrowth : Periodic compounded rate of return
+  Copyright 1998-1999, PJ Kaufman. All rights reserved }
+
+	inputs: begeqty(numeric), endeqty(numeric), periods(numericsimple);
+	
+	TSMCompoundGrowth = 0;
+	if begeqty <> 0 then 
+		TSMCompoundGrowth =  power(endeqty / begeqty, periods) - 1;

@@ -1,0 +1,31 @@
+{ TSM_EffRatioFreq
+  Copyright 1990-1997 P J Kaufman.  All rights reserved. }
+  
+input:	period(numericsimple);
+vars:	change(0), noise(0), diff(0), ratio(0), signal(0), ERavg(0), ftotal(0),
+		k(0), n(0), sum(0), prob(0), avg(0);
+array:   freq[100](0);
+
+	ratio = 0;
+	diff = AbsValue(close - close[1]);
+	if currentbar > period then begin
+		change = close - close[period];
+		signal = AbsValue(change);
+		noise = summation(diff,period);
+		ratio = 0;
+		if noise <> 0 then ratio = signal / noise;
+		n = intportion(ratio*100);
+		freq[n] = freq[n] + 1;
+		ftotal = ftotal + 1;
+		sum = 0;
+{		avg = 0; }
+		for k = 1 to 100 begin
+{			avg = avg + freq[k]*k;  }
+			if k <= n then sum = sum + freq[k];
+			end;
+{		avg = avg / ftotal;  }
+		prob = sum*100 / ftotal;
+{      	ERavg =@average(prob,navg); }
+      	end;
+	TSM_EffRatioFreq = prob;
+

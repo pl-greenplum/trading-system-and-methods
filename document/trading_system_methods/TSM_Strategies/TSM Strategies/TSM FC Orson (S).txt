@@ -1,0 +1,34 @@
+[LegacyColorValue = true]; 
+
+{ TSM FC Orson : Breakout with Low Volatility
+   Copyright 1999, Francesco Cavasino. All rights reserved. Used with permission.
+   Piazza De Gasperi, 3
+   20091 Bresso (Milano) Italy
+   Telephone (011 39335) 835 6827   
+   stoch@tin.it
+
+   Reference: F. Cavasino, "FC StochVol, Volatility analysis," MTA Journal  Summer/Fall 1997,
+	 (Market Technicians Association, 4 World Trade Center, New York)}
+
+	inputs: length(20), filter(20);
+	vars:    vola(0), v1(0);
+
+	v1 = (highest(TSMFCVolatility(close,length), 60) - lowest(TSMFCVolatility(close,length), 60))*0.01;
+
+	if v1 <> 0 then
+			 vola = (TSMFCVolatility(close,length) - lowest(TSMFCVolatility(close,length), 60) ) / v1 
+		else 
+			vola=0;
+
+	condition1=vola< filter;
+
+	if condition1 then begin
+		Buy Next Bar  at highest(high, length) stop;
+		Sell Short Next Bar  at lowest(low,length) stop;
+		end;
+
+	if marketposition > 0 then Sell Next Bar  at lowest(low, length) stop;
+	if marketposition < 0 then Buy to Cover Next Bar  at highest(high, length) stop;
+
+
+

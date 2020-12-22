@@ -1,0 +1,21 @@
+[LegacyColorValue = true]; 
+
+{ TSM Volatility Bkout : Volatility Breakout System
+   Enter one the close when price volatility exceeds a threshold level.
+   Values and signal are calculated concurrently on the close of the bar.
+   Copyright 1999,2012, P J Kaufman.  All rights reserved. }
+
+{ length = length of calculation period
+   factor = volatility threshold factor }
+  
+	input:	length(20), factor(3.0);
+	vars:	trange(0), vlty(0);
+
+{ Normal volatility is average true range }
+	trange = truerange;
+	vlty = average(trange,length);
+
+{ long signal if close rises by more than volatility threshold }
+	if close - close[1]   >  factor * vlty then Buy This Bar  on close
+{ sell signal if close declines more than volatility threshold }
+		else if close[1] - close > factor * vlty then Sell Short This Bar  on close;

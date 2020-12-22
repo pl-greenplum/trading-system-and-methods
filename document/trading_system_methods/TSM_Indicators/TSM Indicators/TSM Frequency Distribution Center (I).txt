@@ -1,0 +1,18 @@
+[LegacyColorValue = true]; 
+
+{ TSM Frequency Distribution Center: Create a frequency distribution of no more than 20 cells
+	and returns the percentage level of the location of the center (mode)
+  Copyright 1998-1999, PJ Kaufman. All rights reserved.
+
+  NOTE:  Users may find that the median is the best representation of
+			the center of the distribution
+
+	Be sure to make the number of cells no more than 25% of the "length"
+
+ 	 price = input series
+ 	 length = number of past items to be included in the distribution
+ 	 ncells = the number of cells in the frequency distribution (default and maximum = 20) }
+
+	inputs: length(50), ncells(10);
+
+	plot1(TSMFreqDistCenter(close,length,ncells),"TSMFDcenter");

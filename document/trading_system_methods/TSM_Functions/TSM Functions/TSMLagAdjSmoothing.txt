@@ -1,0 +1,13 @@
+[LegacyColorValue = true]; 
+
+{ TSMLagAdjSmoothing: Second smoothing corrects for the lag
+  Copyright 1999, P.J.Kaufman. All rights reserved. }
+
+	input:	price(numericseries), length1(numericsimple), length2(numericsimple);
+	var:	avg(0), davg(0), error(0), eavg(0);
+
+	avg = smoothedaverage(close,length1);
+	error = close - avg;
+	eavg = eavg[1] + (2 / (length2 + 1))*(error - eavg[1]);
+	davg = avg + eavg;
+	TSMLagAdjSmoothing = davg;

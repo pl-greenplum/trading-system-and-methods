@@ -1,0 +1,33 @@
+{ TSM Moving Skewness
+	Copyright 2003,2011, P.J.Kaufman. All rights reserved.
+	Based on Dennis McNicholl, "Old statistical methods for new tricks in analysis"
+	(Futures, April 2002). Also see "Taming complexity" by Dennis Nicholl. }
+	
+	inputs:	MMper(0.1), MDper(0.05), MSper(0.333);
+	vars:		S(0), DD(0), M(0), dev(0), SMD(0), DMD(0), MD(0), std(0), G1(0), t1(0), t2(0);
+	
+	if currentbar = 1 then begin
+			S = close;
+			DD = close;
+			end
+{ calculate the moving mean using exponential smoothing }			
+		else begin
+			S = MMper*close + S[1]*(1 - MMper);
+{ D is the double smoothing of closing prices }
+			DD = MMper*S + DD[1]*(1 - MMper);
+			M = (S*(2 - MMper) - DD)/(1 - MMper);
+{ calculate the moving deviation MD }
+			DEV = close - M;
+			SMD = MDper*absvalue(DEV) + SMD[1]*(1 - MDper);
+			DMD = MDper*SMD + DMD[1]*(1 - MDper);
+			MD = (SMD*(2 - MDper) - DMD)/(1 - MDper);
+{ probability level of about 90% }			
+			std = 1.25*MD; 
+			
+{ calculate moving skewness }
+			t1 = MSper*power(DEV,3) + G1[1]*(1 - MSper);
+			t2 = power(STD,3);
+			if t2 > 0.1 and t1 > 0.1 then G1 = t1/t2;
+			
+			plot1(G1,"skewness");
+			end;						

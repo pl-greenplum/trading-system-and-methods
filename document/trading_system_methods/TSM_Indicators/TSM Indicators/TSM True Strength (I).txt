@@ -1,0 +1,8 @@
+[LegacyColorValue = true]; 
+
+{ TSM True Strength: Blau's True Strength Index
+   Copyright 1998-1999, PJ Kaufman, All rights reserved.}
+
+	 inputs:	smooth1(20), smooth2(5);
+
+	 plot1(TSMTrueStrength(close,smooth1,smooth2),"TSMTSI");

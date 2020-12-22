@@ -1,0 +1,20 @@
+{ TSM Aspray Demand Oscillator
+  Copyright 2011, P.J.Kaufman. All rights reserved. }
+  
+  inputs: period(10), rangeper(2);
+  vars:	buyingpressure(0), sellingpressure(0), k(0), returns(0);
+  
+  k = (3*close)/(average(highest(high,rangeper) - lowest(low,rangeper),period));
+  Returns = (close - close[1])/close[1];
+  If close > close[1] then begin
+  		buyingpressure = volume;
+  		sellingpressure = volume/(k*returns);
+  		End
+  	Else if Close < close[1] then begin
+  		buyingpressure = volume/(k*returns);
+  		sellingpressure = volume;
+  	end;
+  	
+  	plot1(buyingpressure,"BP");
+  	plot2(sellingpressure,"SP");
+  	

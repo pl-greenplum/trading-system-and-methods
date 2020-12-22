@@ -1,0 +1,62 @@
+{ TSM Volume Strategy1
+  Copyright 2011, P.J.Kaufman. All rights reserved. }
+  
+  inputs: 	rule(1), period(20), abovebelow(1), ratio(.8), minvol(500);
+  vars:		volratio(0), entryratio(0), avgvol(0), newtrade(0), investment(25000), size(0);
+  vars:		holdtrade(true);
+  
+{ rule = 1, trend direction
+		 = 2, mean reversion
+  abovebelow = 1, Then volume must be above ratio
+  				 = -1, Then volume must be below ratio }  
+  
+  avgvol = average(volume,period);
+  if avgvol[1] <> 0 then 
+  		volratio = volume/avgvol[1]
+  	Else
+  		volratio = 0;
+  		
+  	Newtrade = 0;
+  
+ 	If avgtruerange(period)*Bigpointvalue > minvol then begin
+ 		size = investment/(avgtruerange(period)*bigpointvalue);
+{ Rule 1 is concurrent. Enter position on same day as ratio } 
+{ test if ratio in range to trade }  
+ 		If (abovebelow = 1 and volratio >= ratio) or (abovebelow = -1 and volratio <= ratio) then begin
+ 			if rule = 1 then begin
+ 					if marketposition <> 1 and close > close[1] then begin
+ 							Buy ("Rule1B") size contracts this bar on close;
+ 							Newtrade = 1;
+ 							end
+ 						Else if marketposition <> -1 and Close < close[1] then begin
+ 							sell short ("Rule1S") size contracts this bar on close;
+ 							Newtrade = -1;
+ 						end;
+ 					end
+ 				Else if rule = 2 then begin
+ 					if marketposition <> -1 and close > close[1] then begin
+ 							Sell short ("Rule2S") size contracts this bar on close;
+ 							Newtrade = -1;
+ 							end
+ 						Else if marketposition <> 1 and Close < close[1] then begin
+ 							buy ("Rule2B") size contracts this bar on close;
+ 							Newtrade = 1;
+ 						end;
+ 				end;
+ 			end;
+ 		end;
+ 		
+ 	If Newtrade = 0 and marketposition <> 0 then begin
+ 		If holdtrade then begin
+ 				If Marketposition > 0 and close < Open or close < close[1] then
+ 						Sell all contracts this bar on close
+ 					Else if marketposition < 0 and close > Open or close > close[1] then
+ 						buy to cover all contracts this bar on close;
+ 				End
+ { exit any open trades and put results into arrays }
+			else begin
+				if Marketposition > 0 then Sell all contracts this bar on close
+					Else if Marketposition < 0 then buy to cover all contracts this bar on close;
+			end;
+		end;
+	

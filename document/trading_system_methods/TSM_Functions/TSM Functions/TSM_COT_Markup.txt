@@ -1,0 +1,23 @@
+{ TSM_COT_Markup
+	called by strategy TSM COT Markup }
+	
+	inputs:	len(numericsimple), brklen(numericsimple), retrace(numeric);
+	vars:		pricevol(0), mkup(0), pvcorm(0), rsmi(0), payoff(0), price(0), yestv(0), outputmode(0);
+	
+	price = (high + low)/2;
+	pricevol = correlation(price,yestv,len);
+	rsmi = 2*((pricevol[1] - lowest(pricevol[1],len))/(highest(pricevol[1],len) - lowest(pricevol[1],len)) - 0.5);
+	
+	payoff = HPI(100,0.1);
+	if rsmi > 0.3 then pvcorm = 1
+		else if rsmi < -0.3 then pvcorm = -1;
+		
+	if pvcorm = 1 and payoff > 0 then mkup = 1;
+	if payoff = highest(payoff,brklen) and payoff > 0 then mkup = 2;
+	if mkup = 2 and (payoff < 1 - retrace*highest(payoff,brklen) or payoff < 0) then mkup = 0;
+	if mkup = 1 and (pvcorm = -1 or payoff < 0) then mkup = 0;
+	if mkup > 0 then outputmode = 1 else outputmode = 0;
+	
+	TSM_COT_markup = outputmode;
+	
+	

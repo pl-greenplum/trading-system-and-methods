@@ -1,0 +1,9 @@
+[LegacyColorValue = true]; 
+
+{ TSMPosVolumeIndex : Positive Volume Index
+  Copyright 1998-1999, PJ Kaufman. All rights reserved } 
+
+  if close > close[1] then 
+		TSMPosVolumeIndex = TSMPosVolumeIndex[1] + volume
+	else 
+		TSMPosVolumeIndex = TSMPosVolumeIndex[1];

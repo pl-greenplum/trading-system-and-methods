@@ -1,0 +1,14 @@
+{ TSM Triangular MACD
+	Copyright 2011, P.J.Kaufman. All rights reserved. }
+	
+	inputs: period(21);
+	vars:		period2(0), triangular1(0), triangular2(0), triMACD(0);
+	
+	period2 = 0.5*period;
+	
+	triangular1 = TriAverage(close,period);
+	triangular2 = TriAverage(close,period2);
+	triMACD = triangular2 - triangular1;
+	
+	plot1(triMACD,"triMACD");
+	

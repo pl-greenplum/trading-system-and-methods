@@ -1,0 +1,20 @@
+[LegacyColorValue = true]; 
+
+{ TSMLRSsignal :  Linear regression slope signal 
+  Copyright 1994-1999, P J Kaufman. All rights reserved. }
+
+{period = length of exponential trend
+  filter = whole % trend change to give signal
+  lag = 0 to enter on close, n to enter n-days later
+}
+  input: period(numericsimple), filter(numeric), lag(numeric);
+  vars: slope(0), signal(0);
+
+{ Call linear regression slope User Function }
+  slope = TSMLRslope(close,period);
+  signal = signal[1];
+{ long signal : slope is be up by more than filter }
+  if lag >= 0 and slope[lag] > filter then signal = 1;
+{ short signal : slope is down by more than filter }
+  if lag >= 0 and slope[lag] < -filter then signal = -1;
+  TSMLRSsignal = signal;

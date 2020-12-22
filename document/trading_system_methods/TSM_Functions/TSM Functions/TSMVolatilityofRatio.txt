@@ -1,0 +1,12 @@
+[LegacyColorValue = true]; 
+
+{ TSMVolatilityRatio: Volatility as an adjusted ratio
+  Copyright 1998-1999, PJ Kaufman. All rights reserved.
+  Based on Bookstaber, The Complete Investment Book (Scott, Foresman, 1985) }
+
+	inputs: price(numericseries), length(numericsimple);
+	vars:	ratio(0), natlog(0);
+
+	ratio = price / price[1];
+	natlog = log(ratio);
+	TSMVolatilityofRatio = average(natlog, length);

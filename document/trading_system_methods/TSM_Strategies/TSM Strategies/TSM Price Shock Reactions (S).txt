@@ -1,0 +1,29 @@
+{ TSM Price Shock Reactions
+  Copyright 2011, P.J.Kaufman. All rights reserved. 
+  
+  Given an input criteria, in %, show the price shock and 10-day cumulative reaction }
+   
+  inputs: factor(2.0), zone(.25);
+  vars:	 ndays(10), lag(30), ATR(0), ratio(0), location(0);
+  
+   If Currentbar = 1 then begin
+		print (file("c:\TSM5\Price_Shock_Reactions.csv"),
+			 "date,Ratio,Position,Shock,Start,Day2,Day3,Day4,Day5,Day6"); 
+		end;
+   
+   ATR = AvgTrueRange(60);
+   if ATR[lag] = 0 then ratio = 0
+   	else ratio = truerange[ndays] / ATR[lag];
+   	
+   If ratio >= factor then begin
+   	location = (close - low)/(High - low);
+   	If zone = 0 or location >= 1 - zone or location < zone then begin
+   
+			print (file("c:\TSM5\Price_Shock_Reactions.csv"), date[ndays]:8:0, ",", ratio:4:3, ",", 
+				location:3:3, ",",
+				close[ndays] - close[ndays+1]:6:4, ",", close[ndays-1] - close[ndays]:6:4, ",",
+				close[ndays-2] - close[ndays]:6:4, ",", close[ndays-3] - close[ndays]:6:4, ",",
+ 				close[ndays-4] - close[ndays]:6:4, ",", close[ndays-5] - close[ndays]:6:4, ",",
+				close[ndays-6] - close[ndays]:6:4);
+			end;
+		end;

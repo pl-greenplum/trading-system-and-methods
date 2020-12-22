@@ -1,0 +1,31 @@
+[LegacyColorValue = true]; 
+
+{ TSMRiskOfRuin : Risk of ruin 
+   Copyright 1999,2011, P.J.Kaufman. All rights reserved. }
+
+{	inputs: invest = size of investment, in $1,000s 
+			maxrisk = maximum risk as a percentage of the
+					initial investment (e.g., .25 = 25%) }
+
+	inputs: invest(numeric), maxrisk(numeric);
+	vars: avgwin(0), avgloss(0), winprob(0), lossprob(0), avgpwin(0),
+			avgploss(0), winevent(0), lossevent(0), z(0), aa(0), prob(0);
+
+	avgwin = 0;
+	if numwintrades > 0 then avgwin = grossprofit / numwintrades;
+	avgloss = 0;
+	if numlostrades > 0 then avgloss = grossloss / numlostrades;
+	winprob = 0;
+	if totaltrades > 0 then winprob = numwintrades / totaltrades;
+	lossprob = 1.0 - winprob;
+	avgpwin = absvalue(avgwin / (invest*1000));
+	avgploss = absvalue(avgloss / (invest*1000));
+	winevent = winprob * avgpwin;
+	lossevent = lossprob * avgploss;
+	z = winevent - lossevent;
+	aa = squareroot(power(winevent*winevent,2) + power(lossevent*lossevent,2));
+	if aa <> 0 then prob = .5 * (1 + (z / aa));
+	if prob <> 0 and aa <> 0 then
+			TSMRiskOfRuin = power((1 - prob)/prob,maxrisk/aa)
+		else
+			TSMRiskOfRuin = 0;

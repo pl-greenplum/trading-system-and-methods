@@ -1,0 +1,13 @@
+{ TSM MA of Ratio 
+  Copyright 2011, P.J.Kaufman. All rights reserved.
+  Plots the trend of a ratio }
+  
+  inputs: period(40);
+  vars:	 ratio(0), MA(0);
+  
+  ratio = close/Close of data2;
+  MA = average(ratio,period);
+  
+  plot1(MA,"MA");
+  
+  

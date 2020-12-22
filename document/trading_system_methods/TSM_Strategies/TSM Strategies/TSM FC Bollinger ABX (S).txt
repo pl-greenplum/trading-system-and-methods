@@ -1,0 +1,38 @@
+[LegacyColorValue = true]; 
+
+{	TSM FC Bollinger ABX : Two Bollinger bands with profit-taking
+	Copyright 1999, F. Cavasino. Used with permission.
+
+ 	"FC Bollinger ABX" is written by 
+	Francesco Cavasino
+	Piazza De Gasperi, 3
+	20091 Bresso (Milan) Italy
+	email: Stoch@tin.it
+}
+	inputs: length(21), sdext(2);
+	vars: outupper(0), outlower(0), inupper(0), inlower(0), mavg(0),
+	Smid(0), SM(0), SM2(0);
+
+{ outside Bollinger band }
+	SM = -1 * sdext;
+{ upper outside band }
+	outupper = BOLLINGERBAND(close, length, sdext);
+{ lower outside band }
+	outlower = BOLLINGERBAND(close, length, SM);
+	mavg = AVERAGE(close, length);
+
+{ inside Bollinger band }
+	SMID = sdext / 2;
+	SM2 = -1 * SMID;
+{ upper inside band }
+	inupper= BOLLINGERBAND(close, length, SMID);
+{ lower inside band }
+	inlower= BOLLINGERBAND(close, length, SM2);
+
+	IF CLOSE CROSSES ABOVE outupper THEN Buy 2 CONTRACTS NEXT BAR AT MARKET;
+	IF CLOSE CROSSES BELOW inupper THEN Sell 1 CONTRACT NEXT BAR AT MARKET;
+	IF CLOSE CROSSES BELOW mavg THEN Sell 1 CONTRACT NEXT BAR AT MARKET;
+
+	IF CLOSE CROSSES BELOW outlower THEN Sell Short 2 CONTRACTS NEXT BAR AT MARKET;
+	IF CLOSE CROSSES ABOVE inlower THEN Buy to Cover 1 CONTRACT NEXT BAR AT MARKET;
+	IF CLOSE CROSSES ABOVE mavg THEN Buy to Cover 1 CONTRACT NEXT BAR AT MARKET;

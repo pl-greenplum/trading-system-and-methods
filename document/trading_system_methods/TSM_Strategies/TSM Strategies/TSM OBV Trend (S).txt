@@ -1,0 +1,26 @@
+{ TSM OBV Trend
+  Copyright 2011, P.J.Kaufman. All rights reserved. }
+  
+  inputs: period(60);
+  vars:	 investment(10000), MAOBV(0), size(0), OBVlocal(0);
+  
+  	if Close > Close[1] then 
+			OBVlocal = OBVlocal[1] + Volume 
+		else if Close < Close[1] then 
+			OBVlocal = OBVlocal[1] - Volume 
+		else 
+			OBVlocal = OBVlocal[1];
+  
+  MAOBV = average(OBVlocal,period);
+  
+  If MAOBV > MAOBV[1] and marketposition <> 1 then begin
+  		size = investment / (AvgTrueRange(20)*bigpointvalue); 
+  		Buy size contracts this bar on close;
+  		End
+  	Else if MAOBV < MAOBV[1] and marketposition <> -1 then begin
+  	  	size = investment / (AvgTrueRange(20)*bigpointvalue); 
+  	  	Sell short size contract this bar on close;
+  	end;
+  	
+  	
+	

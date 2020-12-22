@@ -1,0 +1,69 @@
+[LegacyColorValue = true]; 
+
+{ TSM Equity Trend : Change number of contracts based
+	on equity trend; use moving average crossover
+  Copyright 1994-1999, P J Kaufman. All rights reserved. }
+
+{	NOTE: SET PROPERTIES TO ALLOW MULTIPLE ENTRIES
+		IN THE SAME DIRECTION BY DIFFERENT SIGNALS }
+
+{	length1 = length of moving average 1
+	length2 = length of moving average 2
+	eqlen = length of trend for equity analysis
+	size = normal number of contracts to trade
+	reduce = % of reduced position on downtrend
+			in equity
+	inv1000M = investment size in $1,000s    }
+
+	input: length1(20), length2(5), eqlen(10), size(10), 
+			reduce(50), inv1000M(10), maxrisk(.25);
+	vars:  ma1(0), ma2(0), faster(0), slower(0), Sharpe(0),
+			equity(0), invest(0), AMR(0), EDR(0), ncontr(0),
+			ema(0), diff(0), RR(0);
+
+	if currentbar = 1 then begin
+		invest = inv1000M * 1000;
+		if length1 < length2 then begin
+				faster = length1;
+				slower = length2;
+				end
+			else begin
+				faster = length2;
+				slower = length1;
+				end;
+		ncontr = size;
+		end;
+	
+	ma1 = average(close, faster);
+	ma2 = average(close, slower);
+
+	if ma1 > ma2 then Buy This Bar  ncontr contracts at close;
+	if ma1 < ma2 then Sell Short This Bar  ncontr contracts at close;
+
+	equity = netprofit + openpositionprofit;
+	AMR = TSMAvgMaxRetrace(equity);
+	EDR = TSMEquityDropRatio(equity);
+	Sharpe = TSMSharpeRatio(equity, 0, .05, invest);
+	RR = TSMRiskOfRuin(inv1000M,maxrisk);
+
+{ vary contracts on equity trend }
+	ema = average(equity,eqlen);
+	if ema < ema[1] then begin
+			ncontr = size * reduce / 100;
+			diff = currentcontracts - ncontr;
+			if diff > 0 then begin
+				if marketposition = 1 then Sell Short This Bar diff contracts at close;
+				if marketposition = -1 then Buy This Bar diff contracts at close;
+				end;
+			end
+		else begin
+			ncontr = size;
+			diff = ncontr - currentcontracts;
+			if diff > 0 then begin
+				if marketposition = 1 then Buy This Bar diff contracts at close;
+				if marketposition = -1 then Sell Short This Bar diff contracts at close;
+				end;
+		end;
+
+	print (file("c:\TSM5\TSMeqty.txt"), date:6:0, marketposition:4:0, ncontr:4:0, 
+		equity:10:0, AMR:5:1, EDR:5:1, Sharpe:3:1, RR:2:3, TSMOptimalf:2:3);

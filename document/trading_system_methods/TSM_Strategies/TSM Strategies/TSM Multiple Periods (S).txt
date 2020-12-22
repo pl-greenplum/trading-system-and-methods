@@ -1,0 +1,26 @@
+[LegacyColorValue = true]; 
+
+{ TSM Multiple Periods : Linear Regression Slope + Stochastic 
+  Copyright 1998. PJ Kaufman. All rights reserved. }
+
+{ period = length of exponential trend
+  data1 = shorter time period of stochastic
+  data2 = longer time period of linear regression slope }
+
+	input:	fast(5), slow(50); 
+	vars:	slope(0), overbot(80), oversold(20), stoch(0);
+
+{ calculate stochastic over shorter data period }
+	stoch = slowk(fast) of data1;
+ 
+{ Linear regression slope }
+	slope = LinearRegSlope(close of data2,slow);
+
+	if slope > 0 then Buy to Cover This Bar  on close;
+	if slope < 0 then Sell This Bar  on close;
+
+{ long signal : slope must be up and stochastic below low threshhold }
+	if slope > 0 and stoch < oversold then Buy This Bar  on close;
+
+{ short signal : slope must by down and stochastic above upper threshhold }
+	if slope < 0 and stoch > overbot then Sell Short This Bar  on close;

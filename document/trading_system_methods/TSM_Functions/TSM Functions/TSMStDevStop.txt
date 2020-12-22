@@ -1,0 +1,22 @@
+[LegacyColorValue = true]; 
+
+{ TSMStdevStop : Standard Deviation Stop
+   Copyright 1999, P.J.Kaufman. All rights reserved.
+   Based on C. Kase, "Redefining Volatility and Position Risk,"
+	Technical Analysis of Stocks & Commodities, October 1993 }
+
+{	inputs: length = average true range calculation period
+						(normally 30 for intraday, 20 for daily)
+			factor = standard deviation value for stop }
+
+	inputs: length(numericsimple), factor(numeric);
+	vars:	high2(0), low2(0), tr2(0), avgtr(0), sd(0);
+
+	high2 = highest(high,2);
+	low2 = lowest(low,2);
+	if close[2] > high2 then high2 = close[2];
+	if close[2] < low2 then low2 = close[2];
+	tr2 = high2 - low2;
+	avgtr = average(tr2, length);
+	sd = stddev(tr2, length);
+	TSMStdevStop = factor * sd;

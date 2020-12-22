@@ -1,0 +1,66 @@
+{ TSM Midday Support and Resistance
+	Copyright 2011. PJ Kaufman. All rights reserved. }
+	
+{ Intraday trading method based on support and resistance occurring midday }
+
+	inputs: middaytime(1200), breakoutonly(true);
+
+	vars:	afternoon(false), todayhigh(0), todaylow(0), todayhighclose(0), todaylowclose(0),
+			signal(0), newaction(0), zone(.25);
+
+	if date <> date[1] then begin
+		afternoon = false;
+		newaction = 0;
+		todayhigh = high;
+		todaylow = low;
+		todayhighclose = close;
+		todaylowclose = close;
+		end;
+
+	if time >= middaytime and time[1] < middaytime then begin
+			afternoon = true;
+			newaction = 0;
+			end
+		else begin
+			todayhigh = maxlist(todayhigh,high);
+			todayhighclose = maxlist(todayhighclose,close);
+			todaylow = minlist(todaylow,low);
+			todaylowclose = minlist(todaylowclose,close);
+		end;
+
+	if afternoon = true then begin
+{ currently long, test if reverse on a breakout }
+		if marketposition >= 0 then begin
+				sell ("MDxlong") all contracts next bar at todaylow stop;
+				sell short ("MDshort") 1 contract next bar at todaylow stop;
+				end
+{ currently short, test if reverse on a breakout }
+			else if marketposition <= 0 then begin
+				buy to cover ("MDxshort") all contracts next bar at todayhigh stop;
+				buy ("MDlong") 1 contract next bar at todayhigh stop;
+			end;
+{ currently long but prices test resistance at midday }
+		if breakoutonly = false and marketposition >= 0 and marketposition = signal and 
+				close > todayhigh - zone*(todayhigh - todaylow) then begin
+					sell ("MDxres") all contracts this bar on close;
+					sell short ("MDres") 1 contract this bar on close;
+				end
+			else if breakoutonly = false and marketposition <= 0 and marketposition = signal and
+				close < todaylow + zone*(todayhigh - todaylow) then begin
+					buy to cover ("MDxsup") all contracts this bar on close;
+					buy ("MDsup") 1 contract this bar on close;
+				end; 
+		end;
+		
+	signal = marketposition;
+				
+{
+		print (file("c:\TSM5\Reversal_Patterns.csv"),",Higher High,,Lower Low,,Total Cases ",currentbar:5:0);
+		print (file("c:\TSM5\Reversal_Patterns.csv"),"Pattern,Open,Close,Open,Close,Up,Down");
+		print (file("c:\TSM5\Reversal_Patterns.csv"),"Trend,", TUopen*100/nTU:4:0, ",", TUclose*100/nTU:4:0, ",",
+				TDopen*100/nTD:4:0, ",", TDclose*100/nTD:4:0, ",", nTU:4:0, ",", nTD:4:0);
+		print (file("c:\TSM5\Reversal_Patterns.csv"),"Reversal,", RUopen*100/nRU:4:0, ",", RUclose*100/nRU:4:0, ",", 
+				RDopen*100/nRD:4:0 ,",", RDclose*100/nRD:4:0, ",", nRU:4:0, ",", nRD:4:0);
+		print (file("c:\TSM5\Reversal_Patterns.csv"),"Extreme,", EUopen*100/nEU:4:0, ",", EUclose*100/nEU:4:0, ",", 
+				EDopen*100/nED:4:0, ",", EDclose*100/nED:4:0, ",", nEU:4:0, ",", nED:4:0);
+}

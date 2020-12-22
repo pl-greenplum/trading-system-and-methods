@@ -1,0 +1,36 @@
+{ THIS FUNCTION CAN ONLY BE USED WITH FUTURES SINCE IT USES "DAILYLIMIT" } 
+{ Because there are few daily limits, allow "maxmove" to be present. This effectively only scales the values }
+
+inputs:	maxmove(100);
+{ these names match the names used by Wilder }
+variables: K( 0 ), R( 0 ), H0C1( 0 ), L0C1( 0 ), H0L0( 0 ), C1O1( 0 ), wsi(0) ;  
+
+if maxmove <> 0 then begin
+	H0C1 = AbsValue( H - C[1] ) ;
+	L0C1 = AbsValue( L - C[1] ) ;
+	H0L0 = H - L ;
+	C1O1 = AbsValue( C[1] - O[1] ) ;
+
+	if H0C1 >= L0C1 then begin
+		K = H0C1 ;
+		if H0C1 >= H0L0 then
+				R = H0C1 - 0.5 * L0C1 + 0.25 * C1O1
+			else
+				R = H0L0 + 0.25 * C1O1 ;
+			end
+	else begin
+		K = L0C1;
+		if L0C1 >= H0L0 then
+				R = L0C1 - 0.5 * H0C1 + 0.25 * C1O1
+			else
+				R = H0L0 + 0.25 * C1O1 ;
+			end ;
+	if R <> 0 then
+			wsi = 50 * ( ( ( C - C[1] ) + 0.50 * ( C - O ) + 0.25 
+		 		* ( C[1] - O[1] ) ) / R ) * K / maxmove
+		else
+			wsi = 0 ;
+		end ;
+		
+	plot1(wsi,"wsi");
+	

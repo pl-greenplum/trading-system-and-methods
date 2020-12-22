@@ -1,0 +1,10 @@
+[LegacyColorValue = true]; 
+
+{ TSMAccSwingIndex: Wilder's Swing Index
+  Copyright 1998-1999, PJ Kaufman. All rights reserved } 
+
+{ input "limitmov" can be zero }
+
+	inputs: limitmov(0);
+
+	plot1(TSMAccSwingIndex(limitmov), "TSMAccSwg");

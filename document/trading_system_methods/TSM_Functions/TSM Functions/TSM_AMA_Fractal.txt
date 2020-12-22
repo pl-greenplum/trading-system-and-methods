@@ -1,0 +1,46 @@
+{ TSM_AMA_Fractal
+	Adapted from John Ehlers, "Fractal Adaptive Moving Averages," 
+	(Technical Analysis of Stocks & Commodities, October 2005)
+	Copyright 2011, P.J.Kaufman. All rights reserved. }
+	
+	inputs:	price(numericseries), n(numericsimple); {n must be an even number}
+	vars:		n3(0), hh(0), ll(0), halfn(0), count(0), n1(0), n2(0),
+				dimen(0), alpha(0), filt(0);
+				
+	n3 = (highest(high,n) - lowest(low,n))/n;
+	hh = high;
+	ll = low;
+	halfn = intportion(0.5*n);	{in case input is an odd number}
+	
+{ scan first half of data }	
+	for count = 0 to halfn - 1 begin
+		if high[count] > hh then hh = high[count];
+		if low[count] < ll then ll = low[count];
+		end;
+		
+	n1 = (hh - ll)/halfn;
+	hh = high[halfn];
+	ll = low[halfn];
+
+{ scan second half of data }
+	for count = halfn to n-1 begin
+		if high[count] > hh then hh = high[count];
+		if low[count] < ll then ll = low[count];
+		end;
+		
+	n2 = (hh - ll)/halfn;
+	
+	if n1 > 0 and n2 > 0 and n3 > 0 then dimen = (log(n1 + n2) - log(n3))/log(2);
+	
+	alpha = expvalue(-4.6*(dimen - 1));
+	alpha = maxlist(0.01,alpha);
+	alpha = minlist(1.0,alpha);
+	
+	filt = alpha*price + (1 - alpha)*filt[1];
+	if currentbar < n + 1 then filt = price;
+	
+	TSM_AMA_fractal = filt;
+	
+	if alpha < 0.01 then alpha = filt;	
+	
+	

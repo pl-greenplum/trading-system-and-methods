@@ -1,0 +1,85 @@
+[LegacyColorValue = true]; 
+
+{ TSM5 Nofri's Congestion Phase System
+  Copyright 2011 P.J. Kaufman. All rights reserved. }
+
+	vars: 	highisactive(false), lowisactive(false), wait(0), dayssincebreakout(0),
+				debug(true), congestionhigh(0), congestionlow(0), netmove(0),
+				avgmove(0), prevhigh(0), prevlow(0), size(0), pmarketposition(0),
+				daysinfalsebreakout(3),
+				multipleofavgmove(2), daysinlargemove(10),
+				entryrule(2),
+				investment(25000);
+
+	dayssincebreakout = dayssincebreakout + 1;
+	wait = maxlist(0,wait-1);
+
+{ wait 10 days if a congestion area follows a large price move }
+{ the 10 day wait is part of the original rules, but the "large" move is subjective
+  it may be that we wait until Volatility is reduced rather than a fixed number of days }
+ { we should replace this cumulative average with an average-off so that there is some growth }
+  
+ 	netmove = netmove + Absvalue(close - close[daysinlargemove]);
+	If Currentbar > 2*daysinlargemove then
+			avgmove = netmove/currentbar
+		Else
+			avgmove = 0;
+	If Marketposition <> 0 and netmove > multipleofavgmove*avgmove[1] then wait = 10;
+
+{ congestion area high }
+	if high[2] > high[3] and close[1] < close[2] and close < close[1] then begin 
+		highisactive = true;
+		congestionhigh = high[2];
+{ wait 7 days after a false breakout -- arbitrary }		
+		If high < prevhigh and dayssincebreakout >= daysinfalsebreakout then wait = 7;
+		end;
+{ congestion area low }
+	If low[2] < low[3] and close[1] > close[2] and close > Close[1] then begin
+		lowisactive = true;
+		congestionlow = low[2];
+{ wait 7 days if there is a false breakout }		
+		If low > prevlow and dayssincebreakout >= daysinfalsebreakout then wait = 7;
+		end;
+		
+{ end of congestion area }
+	if highisactive and high > congestionhigh then begin
+		prevhigh = congestionhigh;
+		dayssincebreakout = 1;
+		highisactive = false;
+		end;
+	If lowisactive and low < congestionlow then begin
+		prevlow = congestionlow;
+		dayssincebreakout = 1;
+		lowisactive = false;
+		end;
+	
+{close out any existing trades on the next close }
+	If Marketposition  > 0 then sell this bar on close
+		Else if marketposition < 0 then buy to cover this bar on close;
+	
+{ entry signal }
+	If highisactive and lowisactive and congestionhigh > congestionlow then begin	
+		size = investment/AvgTrueRange(10);
+		If entryrule = 2 then begin
+				If Close > close[1] and close[1] > close[2] then sell short size contracts this bar on close
+					else if Close < close[1] and close[1] < close[2] then buy size contracts this bar on close;
+				End
+			Else if entryrule = 3 then begin
+				If Close > close[1] and close[1] > close[2] and close[2] > close[3] then sell short this bar on close
+					else if Close < close[1] and close[1] < close[2] and close[2] < close[3] then buy this bar on close;
+			end;
+		end;
+		
+	pmarketposition = marketposition;		
+
+{ print detail for debugging }
+	if currentbar = 1 then
+		print (file("c:\tradestation\Nofri.csv"),"Date,High,Low,Close,newhigh,newlow,",
+				"congestionhigh,congestionlow,marketposition,daysbkout,wait,openPL,netPL");
+
+	print (file("c:\tradestation\Nofri.csv"),date:7:0,",",high:5:4,",",low:5:4,",",close:5:4,",",
+			highisactive,",",lowisactive,",",congestionhigh:5:4,",", congestionlow:5:4,",", 
+			marketposition:4:0,",",dayssincebreakout:4:0,",",wait:4:0,",",openpositionprofit:8:0,
+			",",netprofit:8:0);
+						
+			

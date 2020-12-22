@@ -1,0 +1,33 @@
+[LegacyColorValue = true]; 
+
+{ TSM 1stHour Breakout : First-Hour Breakout System
+  Copyright 1999, 2011 P.J.Kaufman. All rights reserved.
+  (Adapted from M. McNutt, "First Hour Breakout System," Technical Analysis of
+	Stocks & Commodities, July, 1994) 
+
+  SETUP INSTRUCTIONS:
+  1. DATA1 should hold 10-minute bars of a series
+  2. DATA2 should hold 60-minute bars of a series
+  3. DATA3 holds daily data of the same series
+  4. In FORMAT/PROPERTIES do not allow multiple entries in the same direction }
+
+	vars:	Sess1FirstBarDate(0, data2), Sess1FirstBarHigh(0, data2),
+			Sess1FirstBarLow(0, data2), avgdayrange(0,data3);
+	input: length(10);
+
+	avgdayrange = average(high of data3 - low of data3, length) of data3;
+
+	if (time of data2 = Sess1FirstBarTime of data2) or
+   		(date of data2 > date[1] of data2) then begin
+		Sess1FirstBarDate = date of data2;
+		Sess1FirstBarHigh = high of data2;
+		Sess1FirstBarLow = low of data2;
+		end;
+	If (Sess1FirstBarDate = Date of data2) and 
+   		(time of data2 < Sess1EndTime of data2) then begin
+		if close[1] < Sess1FirstBarHigh then Buy Next Bar  at Sess1FirstBarHigh + 20 point stop;
+		if close[1] > Sess1FirstBarLow then Sell Short Next Bar  at Sess1FirstBarLow - 20 point stop;
+		end;
+
+	if low <= Sess1FirstBarHigh - avgdayrange then Buy to Cover Next Bar  at market;
+	if high >= Sess1FirstBarLow[1] + avgdayrange then Sell Next Bar  at market;

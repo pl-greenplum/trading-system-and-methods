@@ -1,0 +1,24 @@
+{ TSM 3-Bar Inside Pattern
+	From Johnan Prathap, "Three-Bar Inside Bar Pattern"
+	Technical Analysis of Stocks & Commodites, March 2011 }
+
+inputs:	tr(0.75), si(0.75);
+
+condition1 = close > close[1];
+condition2 = high < high[1] and low > low[1];
+condition3 = close < close[1];
+
+if marketposition = 0 then begin
+		if condition1 and condition2[1] and condition1[2] then buy next bar on open
+			else if condition3 and condition2[1] and condition3[2] then sell short next bar on open;
+		end
+	
+	else if marketposition = 1 then begin
+		sell next bar at entryprice + entryprice*tr/100 limit;
+		sell next bar at entryprice - entryprice*si/100 stop;
+		end
+
+	else if marketposition = -1 then begin
+		buy to cover next bar at entryprice - entryprice*tr/100 limit;
+		buy to cover next bar at entryprice + entryprice*si/100 stop;
+	end;

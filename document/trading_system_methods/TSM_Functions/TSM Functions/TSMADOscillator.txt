@@ -1,0 +1,25 @@
+[LegacyColorValue = true]; 
+
+{ TSMADOscillator function for the A/D oscillator
+  Copyright 1999, P.J.Kaufman. All rights reserved.
+  Using length=1 gives original value
+}
+  inputs: popen(numericseries), phigh(numericseries), plow(numericseries), 
+          pclose(numericseries), length(numericsimple);
+  vars:   bp(0), sp(0), top(0), bot(0);
+
+  if length = 0 then begin
+      top = phigh;
+      bot = plow;
+      bp = phigh - popen;
+      sp = pclose - plow;
+      end
+   else begin
+      top = highest(phigh,length);
+      bot = lowest(plow,length);
+      bp = top - popen[length];
+      sp = pclose - bot;
+   end;
+{ the following TSMADOscillator is the same as the DRF }
+  TSMADOscillator = 0;
+  if top <> bot then TSMADOscillator = (bp + sp) / (2*(top - bot)); 

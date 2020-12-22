@@ -1,0 +1,12 @@
+{ TSM Exponential Regularization }
+
+inputs:	period(9), lambda(9);
+vars:		exp(0);
+
+exp = TSM_exponential_regularization(close,period,lambda);
+
+if exp > exp[1] and marketposition <= 0 then
+		buy this bar on close
+	else if exp < exp[1] and marketposition >= 0 then
+		sell short this bar on close;
+		

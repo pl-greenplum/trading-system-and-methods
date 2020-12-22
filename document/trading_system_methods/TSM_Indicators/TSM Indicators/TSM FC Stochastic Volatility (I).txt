@@ -1,0 +1,21 @@
+[LegacyColorValue = true]; 
+
+{ TSMFCStochVolatility : Stochastic Volatility function
+   Copyright 1999, Francesco Cavasino. All rights reserved. Used with permission.
+   Piazza De Gasperi, 3
+   20091 Bresso (Milano) Italy
+   Telephone (011 39335) 835 6827   
+   stoch@tin.it
+
+   Reference: F. Cavasino, "FC StochVol, Volatility analysis," MTA Journal  Summer/Fall 1997,
+	 (Market Technicians Association, 4 World Trade Center, New York)}
+
+{  MaxBarsNumber =80, nominal value of len=20, avg=20 }
+
+	inputs: len(20), lenavg(20);
+	vars: stv(0), avg(0);
+
+	stv = TSMFCStochVolatility(len, lenavg);
+	avg = average(stv,avg);
+	plot1(stv,"TSMFCStVlty");
+	plot2(avg,"TSMSVavg");

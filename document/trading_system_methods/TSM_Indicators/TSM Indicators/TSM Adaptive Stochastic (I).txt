@@ -1,0 +1,19 @@
+[LegacyColorValue = true]; 
+
+{ Adaptive Stochastic Indicator
+  Period of stochastic based on efficiency ratio
+  Copyright 1998-1999, 2011, P.J. Kaufman. All rights reserved. }
+
+	input:	period(8);
+	vars:	per(0), astoch(0), raw(0), efratio(0), fastend(3), slowend(30);
+
+	if currentbar <= period then astoch = 50
+		else begin
+			efratio = effratiofreq(period)/100;
+			per = intportion(slowend - efratio*(slowend - fastend));
+			raw = (close - lowest(low,per))*100 / (highest(high,per) - lowest(low,per));
+			astoch = average(raw,3);
+			end;
+	plot1 (raw,"rawStch");
+	plot2 (astoch, "AStoch");
+	plot3 (efratio*100, "efratio");

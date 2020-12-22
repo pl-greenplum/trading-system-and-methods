@@ -1,0 +1,16 @@
+{ FuzzyBullishEngulf function for bullish engulfing pattern
+    From Murray A. Ruggiero, Jr., "Cybernetic Trading Systems" (Wiley, 1997) 
+    
+    Returns 0 if not a bullish engulfing pattern, size if it is }
+    
+inputs:  lookback(numeric), onecof(numeric), zerocof(numeric); 
+vars: 	color(0), sbody(0), lbody(0);
+
+color = candlecolor(open,cclose);
+sbody = fuzzysmall(open,close,lookback,onecof*.3,zerocof*1.0);
+lbody = fuzzylong(open,close,lookback,onecof*2.0,zerocof*1.0);
+
+if engulfing(open,close,1) = 1 and color = 1 and color[1] = -1 then
+      TSM_fuzzybullishengulf = minlist(sbody[1],lbody)
+   else 
+   	TSM_fuzzybullishengulf = 0;

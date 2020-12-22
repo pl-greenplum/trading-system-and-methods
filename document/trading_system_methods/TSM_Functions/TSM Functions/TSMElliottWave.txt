@@ -1,0 +1,55 @@
+[LegacyColorValue = true]; 
+
+{ TSMElliottWave : Identify the current wave number of the Elliott wave formation
+  Copyright 1996-1999, P J Kaufman. All rights reserved. }
+
+  inputs: period(numericsimple), trigger(numeric), 
+		length1(numericsimple), length2(numericsimple);
+  vars:   ET(0), mean(0), osc(0), wave(0), hiosc(-999), hiosc2(-999),hiprice(-999),
+		hiprice2(-999);
+
+  osc = TSMElliottWaveOsc(length1,length2);
+  mean = (high + low)/2;
+{ Is the current wave sequence up or down?}
+  ET = TSMElliottWaveTrend(period,trigger,length1,length2);
+{ When the trend changes from down to up, label it wave 3 and save the current osc and price}
+  if ET = 1 and ET[1] = -1 and osc > 0 then begin
+	hiosc = osc;
+	hiprice = mean;
+	wave = 3;
+	end;
+{ If wave 3 and the oscillator make new highs then save those values}
+  if wave = 3 then begin
+	if mean > hiprice then hiprice = mean;
+	if osc > hiosc then hiosc = osc;
+{ Test for the beginning of wave 4}
+	if osc <= 0 and ET = 1 then wave = 4;
+	end;
+{ Test for the beginning of wave 5}
+  if wave = 4 and mean = highest(mean,5) and osc >= 0 then begin
+	wave = 5;
+	hiosc2 = osc;
+	hiprice2 = mean;
+	end;
+  if wave = 5 then begin
+	if osc > hiosc2 then hiosc2 = osc;
+	if mean > hiprice2 then hiprice2 = mean;
+	end;
+{ Test for wave 5 becoming wave 3}
+  if wave = 5 and hiosc2 > hiosc and ET = 1 then begin
+	wave = 3;
+	hiosc = hiosc2;
+	hiprice = hiprice2;
+	hiosc2 = -999;
+	hiprice2 = -999;
+	end;
+{ Identify a wave 3 down while in wave 5}
+  if wave = 5 and ET = -1 then begin
+	wave = 3;
+	hiosc = -999;
+	hiprice = -999;
+	hiosc2 = -999;
+	hiprice2 = -999;
+	end;
+{ Return function value}
+  TSMElliottWave = wave;

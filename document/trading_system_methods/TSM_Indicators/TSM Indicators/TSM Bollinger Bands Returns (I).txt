@@ -1,0 +1,23 @@
+[LegacyColorValue = true]; 
+
+{ TSMBollingerBandReturns 
+  Copyright 1999,2011, P.J.Kaufman. All rights reserved.
+
+  Returns the width of the Bollinger band as measured from the moving average value.
+  To create an upper and lower band, add and subtract this value from a trend value. 
+
+  length = calculation period
+  nsd = number of standard deviations }
+
+  inputs:	length(20), nsd(2);
+  vars:	bandwidth(0), highband(0), lowband(0), mavg(0), returns(0);
+
+  returns = close/close[1] - 1;
+  bandwidth = stddev(returns,length)*close;
+
+  mavg = average(close,length);
+  highband = mavg + nsd*bandwidth;
+  lowband = mavg - nsd*bandwidth;
+  plot1(highband,"TSMBBRupper");
+  plot2(lowband,"TSMBBRlower");
+

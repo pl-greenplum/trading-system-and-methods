@@ -1,0 +1,21 @@
+[LegacyColorValue = true]; 
+
+{ TSM Modified 3MA cross : Modified 3 moving average crossover
+  Copyright 1994-1999,2011, P J Kaufman. All rights reserved. }
+
+{  length1 = length of moving average 1
+   length2 = length of moving average 2
+   length3 = length of moving average 3
+   
+   Note: the length of MA2 must be greater than MA1 and
+		the length of MA3 must be greater than MA2 }
+
+	input: length1(18), length2(9), length3(4);
+	vars:  ma1(0), ma2(0), ma3(0);
+
+	ma1 = average(close, length1);
+	ma2 = average(close, length2);
+	ma3 = average(close, length3);
+
+	if ma2 > ma1 and ma3 > ma3[1] then Buy This Bar at close;
+	if ma2 < ma1 and ma3 < ma3[1] then Sell Short This Bar at close;

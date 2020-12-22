@@ -1,0 +1,27 @@
+[LegacyColorValue = true]; 
+
+{ TSM Adaptive Intraday Breakout
+	From Dennis Meyers, "Range Roving" (Active Trade, March 2003)
+   Copyright 2011, P J Kaufman, All rights reserved. }
+
+   Inputs: 	period(10), apower(0.75), highthreshold(.50), lowthreshold(1.05); 
+   vars:    highrange(0), lowrange(0), nhr(0), nlr(0), hrmax(0), lrmax(0);
+
+{ high and low ranges }
+	highrange = high - low[period];
+	lowrange = low - high[period];
+{	lowrange = low - low[period]; }
+	
+{ normalized ranges }
+	nhr = highrange/power(period,apower)/avgtruerange(period);
+	nlr = lowrange/power(period,apower)/avgtruerange(period);
+	
+	hrmax = highest(nhr,period);
+	lrmax = lowest(nlr,period);
+	
+{ trading signals }
+{ buy when inside the threshold values }
+	if hrmax > highthreshold and lrmax < lowthreshold then buy 1 contract this bar on close
+{ sell when outside the threshold values }	
+		else if hrmax < highthreshold and lrmax > lowthreshold  then sell short 1 contract this bar on close;
+	

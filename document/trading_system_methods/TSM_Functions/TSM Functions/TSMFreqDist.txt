@@ -1,0 +1,46 @@
+[LegacyColorValue = true]; 
+
+{ TSMFreqDist: Create a frequency distribution of no more than 20 cells
+  Copyright 1998-1999, PJ Kaufman. All rights reserved
+
+  NOTE: THIS FUNCTION DOES NOT RETURN ANY VALUES.
+	IT CREATES A FREQUENCY DISTRIBUTION THAN IS
+	PRINTED TO THE PRINTLOG. THE FREQUENCY DISTRIBUTION
+	GIVES THE ACCUMULATED DISTRIBUTIONS OVER ALL DATA.
+	FOR A "ROLLING DISTRIBUTION" USE "TSMFREQDISTCENTER"
+
+  price = input series
+  length = number of past items to be included in the distribution
+  ncells = the number of cells in the frequency distribution (default and maximum = 20) }
+
+	inputs: price(numericseries), length(numericsimple), ncells(numericsimple);
+	vars:	n(0), k(0),  ix(0), iy(0), save(0), top(0), bot(0), size(0), bound(0),
+			max(0), m(0);
+	array: cells[20](0), scale[20](0);
+
+	n = length;
+	if currentbar < length then n = currentbar;
+	k = ncells;
+	if k > 20 then k = 20;
+{ find range of prices over data series }
+	top = highest(price,n);
+	bot = lowest(price,n);
+	size = (top - bot) / (k - 1);
+	bound = bot;
+	for ix = 1 to k begin
+		bound = bound + size;
+		scale[ix] = bound;
+		end;
+{ scan data, enter frequency }
+	for iy = 0 to n - 1 begin
+		for ix = 1 to k begin
+			if price[iy] <= scale[ix] and (ix = 1 or price[iy] > scale[ix-1]) then cells[ix] = cells[ix] + 1;
+			end;
+		end;
+{ print to PrintLog on final calculation }
+	if lastbaronchart then begin
+		for iy = 1 to k begin
+			print(iy:3:0,scale[iy]:5:4,cells[iy]:5:0);
+			end;
+		end;
+	TSMFreqDist = 0;

@@ -1,0 +1,99 @@
+[LegacyColorValue = true]; 
+
+{ TSMPhasing: J. M. Hurst's phasing
+  Copyright 1999, P.J.Kaufman. All rights reserved.
+
+	NOTE: "halfspan" value must be less than "fullspan"
+}
+	inputs: fullspan(numericsimple), halfspan(numericsimple);
+	vars:	nf(0), nh(0), fullavg(0), halfavg(0), x1(0), x2(0), x3(0),
+			npts(0), y1(0), y2(0), y3(0), swhigh(0), swlow(0),
+			highpt(0), lowpt(0), trend(0), ph(0), hh(0), hpt(0),
+			xi(0), yi(0), acoef(0), bcoef(0), slope(0),	 pprice(0),
+			yint(0), proj(0), ix(0), n(3),
+			sx(0), sy(0), sxy(0), sx2(0);
+	arrays: xx[3](0), yy[3](0);
+
+	proj = 0;
+	pprice = 0;
+	if halfspan < fullspan then begin
+
+		nf = intportion(fullspan/2);
+		nh = intportion(halfspan/2);
+
+{ set the full span and half-span moving averages }
+		fullavg = average(close,fullspan);
+		ph = fullavg[nf];
+		halfavg = average(close,halfspan);
+		hpt = nf - nh;
+		hh = halfavg[hpt];
+		if halfavg >= fullavg then trend = 1 else trend = -1;
+
+{ update high and low since last crossing }
+		if low < swlow then begin
+			swlow = low;
+			lowpt = currentbar;
+			end;
+		if high > swhigh then begin
+			swhigh = high;
+			highpt = currentbar;
+			end;
+
+{ find last 3 points where averages cross (day sequence and price) }
+	if trend <> trend[1] then begin
+{		print ("trends cross at ",currentbar:4:0, " between ",hh:5:3," & ",hh[1]:5:3); }
+		xx[1] = xx[2];
+		xx[2] = xx[3];
+		yy[1] = yy[2];
+		yy[2] = yy[3];
+		yy[3] = (hh + hh[1] + ph + ph[1]) / 4;
+		xx[3] = currentbar;
+		npts = npts + 1;
+{ initialize high or low swing }
+		swhigh = high;
+		highpt = currentbar;
+		swlow = low;
+		lowpt = currentbar;
+		if npts >= 3 then begin
+{ find regression line through 3 points (consider using only two points) }
+{ sums for regression }
+			sx = 0;
+			sy = 0;
+			sxy = 0;
+			sx2 = 0;
+			for ix = 1 to n begin
+				xi = xx[ix];
+				yi = yy[ix];
+				sx = sx + xi;
+				sy = sy + yi;
+				sxy = sxy + xi*yi;
+				sx2 = sx2 + xi*xi;
+				end;
+
+{ regression coefficients "a" and "b" }
+			bcoef = (n*sxy - sx*sy) / (n*sx2 - sx*sx);
+			acoef = (sy - bcoef*sx) / n;
+			end;
+		end;
+
+{ project short-term trend from last high or low since crossing }
+		slope = 0;
+		if trend > 0 and currentbar <> highpt then 
+			slope = (close - swhigh) / (currentbar - highpt)
+		else if trend < 0 and currentbar <> lowpt then
+			slope = (close - swlow) / (currentbar - lowpt);
+		yint = close - slope*currentbar;
+
+{ find barwhere regression and projected short-term cross }
+		if (trend > 0 and slope < 0) or (trend < 0 and slope > 0) then begin
+			proj = (yint - acoef) / (bcoef - slope);
+			pprice = close + (proj - currentbar)*slope;
+			end;
+{		print (currentbar:4:0," HLC ", high:5:3, low:5:3, close:5:3," swings ", swhigh:5:3, swlow:5:3);
+		print ("crossings: (",yy[1]:2:3,",",xx[1]:4:0,"), (",yy[2]:2:3,",",xx[2]:4:0,"),(",
+			yy[3]:2:3,",",xx[3]:4:0,")");
+		print ("halfspan(a,b)=",yint:5:3,",",slope:4:3);
+		print ("trend=",trend:3:0," proj=",proj:5:1," at ",pprice:5:3);  }
+		end;
+
+	TSMPhasing = pprice;

@@ -1,0 +1,20 @@
+[LegacyColorValue = true]; 
+
+{ TSM N-Day Breakout System 
+  Copyright 1994-1999, 2011 P J Kaufman. All rights reserved. }
+
+{ period = length of calculation }
+
+  input: period(20);
+  vars:  nhigh(0), nlow(0);
+
+  nhigh = highest(high,period)[1];
+  nlow  = lowest(low,period)[1];
+  
+{ Buy and sell signals }
+  if high > nhigh and close > close[1] then begin
+	Buy This Bar  on close;
+	end;
+  if low < nlow and close < close[1]  then begin
+	Sell Short This Bar  on close;
+	end;

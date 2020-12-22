@@ -1,0 +1,15 @@
+[LegacyColorValue = true]; 
+
+{ TSM Trend with Oscillator Entry
+  Copyright 2011 P J Kaufman. All rights reserved. }
+
+  	input: trendperiod(60), oscperiod(5), sellzone(80), buyzone(20), investment(25000);
+  	vars:	size(0), osc(0), trend(0);
+
+ 	size = investment/(AvgTrueRange(20)*bigpointvalue);
+ 	trend = average(close,trendperiod);
+ 	osc = fastD(oscperiod);
+ 
+	If trend > trend[1] and osc < buyzone then buy size contracts this bar on close
+		Else if trend < trend[1] and osc > sellzone then sell short size contracts this bar on close;
+		

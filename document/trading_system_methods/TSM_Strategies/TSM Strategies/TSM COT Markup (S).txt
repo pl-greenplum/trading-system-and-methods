@@ -1,0 +1,24 @@
+{TSM COT Markup
+ This program is taken from the article "Trading off the big boys" (Futures, January 1998)
+ by Murray A. Ruggiero, Jr. It has been modified for the new version of TradeStation.
+ Data1 is the price series
+ Data2 is the COT data as follows:
+ 	Open = Longs position held by commericials
+ 	High = Short positions held by commercials
+ 	Low  = Long positions held by hedgers
+ 	Close= Short positions held by hedgers
+ 	Volume= Long positions held by small-lot traders
+ 	OI   = Short positions held by small-lot traders } 
+
+{ NOTE THAT THIS PROGRAM HAS NOT BEEN CHECKED-OUT }
+
+inputs:  len(100), brklen(20), retrace(.50), lk(50), lenC(10); 
+vars:    markupmode(0), netcom(0), scalecom(0);
+
+markupmode = TSM_COT_Markup(len,brklen,retrace);
+
+netcom = open of data2 - high of data2;
+scalecom = 100*(netcom - lowest(netcom,lk))/(highest(netcom,lk) - lowest(netcom,lk));
+
+if marketposition = 0 and highest(scalecom,lenC) > 85 and highest(markupmode,3) = 1 then buy next bar on open;
+if barssinceentry > 30 and markupmode <> 1 then sell next bar on open;

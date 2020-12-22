@@ -1,0 +1,22 @@
+[LegacyColorValue = true]; 
+
+{	Ehlers' Fisher Transform Indicator
+	Copyright 2003, John Ehlers. All rights reserved. }
+
+	Inputs: 	price((H+L)/2), len(10);
+
+	Vars:		maxH(0),minL(0),Fish(0),x(0);
+
+	maxH = highest(price,len);
+	minL = lowest(price,len);
+
+	x = 0.5*2*((price - minL)/(maxH - minL) - 0.5) + 0.5*Fish[1];
+{ another variation from 2002 article }
+{  x = 0.333*2*((price - minL)/(maxH - minL) - 0.5) + 0.667*Fish[1]; }
+	if x > 0.999 then x = 0.999;
+	if x < -0.999 then x = -0.999;
+
+	Fish = 0.5*log((1 + x)/(1 - x)) + 0.5*Fish[1];
+
+	plot1(Fish,"Fisher");
+	plot2(Fish[1],"Trigger");

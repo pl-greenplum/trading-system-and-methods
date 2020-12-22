@@ -1,0 +1,25 @@
+{ TSM Evening Star
+	Candlestick Reversal Pattern
+	Copyright 2011 P.J.Kaufman. All rights reserved. }
+
+	inputs:	period(20), bar1vol(1.5), bar2vol(.75), bar3vol(1.2), holddays(1);
+	vars:		todaybody(0), avgbody(0);
+	
+{ this formation has the following sequence
+	1. A long black candle
+	2. A gap up with a short body and a reversal close
+	3. A thrust down }
+	
+	todaybody = absvalue(open - close);
+	avgbody = average(range,20);
+	
+	if {todaybody > avgbody[1]*bar3vol and} close < open and open < close[1] then begin
+		if {todaybody[1] < avgbody[2]*bar2vol and} open[1] > close[1] and close[1] > close[2] then begin
+			if {todaybody[2] > avgbody[2]*bar1vol and} close[2] > open[2] then begin
+				sell short this bar on close;
+				end;
+			end;
+		end;
+		
+	if marketposition <> 0 and barssinceentry >= holddays then buy to cover this bar on close;
+			

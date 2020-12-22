@@ -1,0 +1,18 @@
+[LegacyColorValue = true]; 
+
+{ TSM Momentum System 
+  Copyright 1994-1999, 2011 P J Kaufman. All rights reserved. }
+
+{ period = length of calculation }
+
+  input: period(20);
+  vars:  nhigh(0), nlow(0);
+
+   
+{ Buy and sell signals }
+  if close > close[period] then begin
+	Buy This Bar on close;
+	end;
+  if close < close[period] then begin
+	Sell Short This Bar on close;
+	end;

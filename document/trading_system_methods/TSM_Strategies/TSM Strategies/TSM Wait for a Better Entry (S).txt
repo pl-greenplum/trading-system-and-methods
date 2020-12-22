@@ -1,0 +1,52 @@
+[LegacyColorValue = true]; 
+
+{ TSM Wait for a better entry : Moving average system which waits for a better entry
+  Copyright 2011 P J Kaufman. All rights reserved. }
+
+{ period = length of calculaton
+  nentries = number of entries
+  daysbetweenentries = days between entry points
+}
+  input: period(80), maxwait(3), threshold(.01);
+  vars:	signal(0), trend(0), newtrend(0), totalPL(0), changePL(0),
+  			wait(0), initialentry(0);
+  			
+	trend = average(close,period);
+	if trend > trend[1] then signal = 1
+		else if trend < trend[1] then signal = -1;
+
+{ new signal }
+	if signal <> signal[1] then begin
+			if marketposition > 0 then begin
+					sell ("trend sell") all contracts this bar on close;
+					signal = -1;
+					end
+				else if marketposition < 0 then begin
+					buy to cover ("trend buy") all contracts this bar on close;
+					signal = 1;
+				end;
+			wait = 0;
+			initialentry = close;
+			end
+		else if signal <> 0 and marketposition = 0 then
+			wait = wait + 1;
+			
+{ test for better entry }
+	if marketposition = 0 then begin
+		if wait >= maxwait then begin
+				if	signal > 0 then buy ("maxtime Long") this bar on close
+					else if signal < 0 then sell short ("maxtime Short") this bar on close;
+				end
+			else begin
+				if signal > 0 and close < initialentry - threshold then buy ("delayed Long") this bar on close
+					else if signal < 0 and close > initialentry + threshold then sell short ("delayed short") this bar on close;
+				end;
+		end;
+			
+  	totalpl = netprofit + openpositionprofit;
+  	changepl = totalpl - totalpl[1];
+  	
+  	If Currentbar = 1 then print(file("c:\TSM5\WaitforentryPL.csv"), 
+  					"Date,close,trend,signal,initial,wait,pos,totalPL,chgPL");
+  	print(file("c:\TSM5\WaitforentryPL.csv"),date:8:0, ",", close:6:4, ",", trend:6:4, ",", signal:3:0, ",", 
+  					initialentry:6:4, ",", wait:3:0, ",", marketposition:3:0, ",", totalpl:5:5, ",", changepl:8:4);

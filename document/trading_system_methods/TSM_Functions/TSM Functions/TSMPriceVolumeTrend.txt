@@ -1,0 +1,9 @@
+[LegacyColorValue = true]; 
+
+{ TSMPriceVolumeTrend : Price and Volume Trend
+  Copyright 1998-1999, PJ Kaufman. All rights reserved } 
+
+  if close[1] <> 0 then 
+		TSMPriceVolumeTrend = TSMPriceVolumeTrend[1] + volume * (close - close[1]) / close[1]
+	else 
+		TSMPriceVolumeTrend = TSMPriceVolumeTrend[1];

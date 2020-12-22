@@ -1,0 +1,52 @@
+{ TSM Dynamic Breakout System with volatility adjustment
+	From Thomas Stridsman, "The Last Trend"
+	Futures Magazine, April 1999
+	Modified by P.J.Kaufman. Copyright 2011. All rights reserved. }
+
+inputs:	period(30), maxvalue(60), minvalue(20), option12(1), optionAB("A");
+vars:		x(0), zdelta(0), varA(0), varB(0), signal(0),oploss(0), opprofit(0),
+			 bottomday(0), peakday(0), buystop(0), sellstop(0), exitlong(0),
+			 exitshort(0), ediff(0), xdiff(0);
+			
+x = stddev(close,period);
+zdelta = (x - x[1])/x;
+if currentbar = 1 then varA = 20;
+
+varA = varA[1]*(1 + zdelta);
+varA = maxlist(varA,minvalue);
+varA = minlist(varA,maxvalue);
+
+if option12 = 1 then
+{ option 1 }
+		VarB = VarA/2
+	else
+{ option 2 }
+		VarB = minvalue/2 + maxvalue - varA;
+		
+if optionAB = "A" then begin
+{ option A }
+		ediff = close[varA] - close;
+		xdiff = close[varB] - close;
+		end
+{ option B }
+	else begin
+		ediff = average(close,varA) - close;
+		xdiff = average(close,varB) - close;
+	end;
+
+buystop = maxlist(high,minlist(highest(high-ediff,varA),highest(high,varA)));
+sellstop = minlist(low,maxlist(lowest(low-ediff,varA),lowest(low,varA)));
+
+Buy 1 contract next bar at buystop stop;
+Sell short 1 contract next bar at sellstop stop;
+
+exitlong = minlist(low,maxlist(lowest(low-xdiff,varB),lowest(low,varB)));
+if exitlong < exitlong[1] and low > exitlong then exitlong = minlist(exitlong[1],low);
+
+exitshort = maxlist(high,minlist(highest(high-xdiff,varB),highest(high,varB)));
+if exitshort > exitshort[1] and high < exitshort then exitshort = maxlist(exitshort[1],high);
+
+sell all contracts next bar at exitlong stop;
+buy to cover all contracts next bar at exitshort stop;
+
+	

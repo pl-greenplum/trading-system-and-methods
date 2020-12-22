@@ -1,0 +1,48 @@
+{TSM Candle Body Reversal System
+	from Bard Matheny, "The Japanese way," Futures, April 1999
+	Adapted by P.J.Kaufman, Copyright 2011. All rights reserved. }
+
+inputs:	weekly(0), wfraction(50), dfraction(50), signo(1), maxpos(1);
+vars:		wtestl(0), wtests(0), stoplevel(0), lcount(0), longno(1), scount(0), shortno(1), posmax(0);
+
+if maxpos = 0 then posmax = 9999 else posmax = maxpos;
+
+{ if weekly then body > 1/2 total length }
+if weekly > 0 and close[1] of data2 - open[1] of data2 > (high[1] of data2 - low[1] of data2)*wfraction/100 
+		then wtestl = 1 else wtestl = 0;
+
+{ must be a weekly signal then a daily signal }
+if marketposition <> 1 and wtestl = 1 and close - open > (high - low)*dfraction/100 then lcount = lcount + 1;
+if lcount >= signo and longno <= posmax and wtestl = 1 and (close - open) > (high - low)*dfraction/100 then begin
+	buy 1 contract this bar on close;
+	scount = 0;
+	stoplevel = open;
+	longno = longno + 1;
+	end;
+	
+if weekly > 0 and open[1] of data2 - close[1] of data2 > (high[1] of data2 - low[1] of data2)*wfraction/100 
+		 then wtests = 1 else wtests = 0;
+
+if marketposition <> -1 and wtests = 1 and open - close > (high - low)*dfraction/100 then scount = scount + 1;
+if scount >= signo and shortno <= posmax and wtests = 1 and open - close > (high - low)*dfraction/100 then begin
+	sell short 1 contract this bar on close;
+	lcount = 0;
+	stoplevel = open;
+	shortno = shortno + 1;
+	end;
+	
+if absvalue(close - open) > (high - low)*dfraction/100 then stoplevel = open;
+
+if marketposition = 1 and close < stoplevel then begin
+	sell all contracts this bar on close;
+	lcount = 0;
+	longno = 1;
+	end;
+	
+if marketposition = -1 and close > stoplevel then begin
+	buy to cover all contracts this bar on close;
+	scount = 0;
+	shortno = 1;
+	end;
+	
+	

@@ -1,0 +1,12 @@
+{ TSM Average off 
+  Copyright 2011, P.J.Kaufman.  All rights reserved. }
+
+	inputs: period(40);
+	vars:		MA(0);
+	
+	If Currentbar = 1 then
+			MA = average(close,period)
+		else
+			MA = ((period - 1)*MA[1] + close)/period;
+	
+	plot1(MA,"AvgOFF");

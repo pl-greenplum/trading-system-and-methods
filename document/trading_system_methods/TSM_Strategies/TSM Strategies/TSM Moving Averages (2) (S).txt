@@ -1,0 +1,38 @@
+[LegacyColorValue = true]; 
+
+{ TSM Moving Averages (2) : 2 Moving average system
+  Copyright 1994-1999,2011 P J Kaufman. All rights reserved. }
+
+{ period = length of calculaton
+  crossoption =0 using trendline, =1 use price crossing trendline
+}
+  input: slowper(20), fastper(5), crossoption(0), entrypriceoption(0);
+  vars:	slowsignal(0), fastsignal(0);
+
+	if slowper > fastper then begin
+	  	slowsignal = TSM_MAsignal(slowper,crossoption);
+	  	fastsignal = TSM_MAsignal(fastper,crossoption);
+  	
+{ entries }  	
+ 		If entrypriceoption = 0 then begin
+  				if slowsignal = 1 and fastsignal = 1 then Buy This Bar at close
+  				else if slowsignal = -1 and fastsignal = -1 then Sell Short This Bar at close;
+  				end
+	  		Else if Entrypriceoption = 1 then begin
+  				If slowsignal = 1 and fastsignal = 1 then buy next bar on open
+  				Else if slowsignal = -1 and fastsignal = -1 then sell short next bar on open;
+  				end
+	  		Else if Entrypriceoption = 2 then begin
+  				If slowsignal[1] = 1 and fastsignal[1] = 1 then buy this bar at close
+  				Else if slowsignal = -1 and fastsignal = -1 then sell short this bar at close;
+  			end;
+
+{ exits }
+		If Marketposition <> 0 then begin
+			If slowsignal*fastsignal < 0 then begin
+				Buy to cover all contracts this bar at close;
+				Sell all contracts this bar at close;
+				end;
+			end;
+		end;	
+  

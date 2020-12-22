@@ -1,0 +1,26 @@
+[LegacyColorValue = true]; 
+
+{ TSM Divergence Index
+  Copyright 2011 P J Kaufman. All rights reserved. }
+
+{ period = length of calculaton
+  crossoption =0 using trendline, =1 use price crossing trendline
+}
+  input: longperiod(40), shortperiod(10), factor(1.0), investment(100000);
+  vars:	MAlong(0), MAshort(0), size(0), diff(0), DI(0), band(0);
+
+	MAlong = average(close,longperiod);
+	MAshort = average(close,shortperiod);
+	diff = Close - close[1];
+	DI = (MAshort - MAlong)/power(stddev(diff,longperiod),2);
+	band = stddev(DI,longperiod);
+	size = investment/(AvgTrueRange(longperiod)*bigpointvalue);
+	
+	If DI < -factor*band and MAlong > 0 then buy size contracts this bar on close;
+	If DI > factor*band and MAlong < 0 then sell short size contracts this bar on close;
+	
+	If Marketposition > 0 and DI >= 0 then sell all contracts this bar on close;
+	If Marketposition < 0 and DI <= 0 then buy to cover all contracts this bar on close;
+	
+	
+			

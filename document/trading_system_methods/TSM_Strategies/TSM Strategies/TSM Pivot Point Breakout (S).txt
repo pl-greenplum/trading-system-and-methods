@@ -1,0 +1,30 @@
+{ Pivot Point Breakout
+	Copyright 2011, P.J.Kaufman. All rights reserved. }
+	
+	inputs: 	period(3);
+	vars:		startday(0), ix(0), lasthigh(0), lastlow(0), lowpassed(false), size(0),
+				investment(25000);
+	
+
+	startday = 2*period + 1;
+	
+{ test high pivot point }	
+	if high[period+1] >= highest(high,startday) then lasthigh = high[period+1];
+	
+{ test low pivot point }
+	If low[period+1] <= lowest(low,startday) then lastlow = low[period+1];
+	
+	If marketposition <> 1 and High > lasthigh then	begin
+			size = investment/(AvgTrueRange(10)*bigpointvalue);
+			If Marketposition = -1 then buy to cover this bar on close;
+			Buy size contracts this bar on close;
+			end
+		Else if Marketposition <> -1 and low < lastlow then begin
+			size = investment/(AvgTrueRange(10)*bigpointvalue);
+			If Marketposition = 1 then sell this bar on close;
+			Sell short size contracts this bar on close;
+		end;
+		
+		
+			
+	

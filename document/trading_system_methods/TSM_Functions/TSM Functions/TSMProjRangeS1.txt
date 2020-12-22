@@ -1,0 +1,10 @@
+[LegacyColorValue = true]; 
+
+{ TSMprojrangeS1 : Projected Range, Support Level 1
+  Copyright 1998-1999, PJ Kaufman. All rights reserved }
+
+	inputs: phigh(numericseries),  plow(numericseries),  pclose(numericseries);
+	vars:	pivot(0);
+
+	pivot = (phigh + plow + pclose) / 2;
+	TSMprojrangeS1 = 2 * pivot - phigh;

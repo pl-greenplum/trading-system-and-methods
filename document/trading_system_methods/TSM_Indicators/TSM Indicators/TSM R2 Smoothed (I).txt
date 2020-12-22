@@ -1,0 +1,13 @@
+{ TSM R2 Smoothed
+	Copyright 2012, P.J.Kaufman. All rights reserved. }
+
+inputs:	period(20);
+vars:		R2(0), seq(0), R2smoothed(0);
+
+seq = currentbar;
+R2 = Correlation(close,seq,period);
+{R2 = R2*R2;}
+R2smoothed = average(r2,period/2);
+
+plot1(R2,"R2");
+plot2(R2smoothed,"R2S");

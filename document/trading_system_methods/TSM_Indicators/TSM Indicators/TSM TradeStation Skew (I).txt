@@ -1,0 +1,10 @@
+{ TSM TradeStation Skew
+	Copyright 2011, P.J.Kaufman. All rights reserved. }
+	
+	inputs:	period(20);
+	vars:		TSskew(0);
+	
+	TSskew = skew(close,period);
+	
+	plot1(TSskew,"TS Skew");
+	

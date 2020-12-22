@@ -1,0 +1,13 @@
+[LegacyColorValue = true]; 
+
+{ TSM RSI N-day
+  Copyright 2011 P J Kaufman. All rights reserved. }
+  
+  inputs: Length(14), Ndays(2);
+  var:	 RSIN(0);
+  
+  RSIN = RSI_Nday(close,length,ndays);
+  Plot1(RSIN,"RSIN");
+  
+
+

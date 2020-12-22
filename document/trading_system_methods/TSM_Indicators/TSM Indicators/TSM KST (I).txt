@@ -1,0 +1,21 @@
+{ TSM KST
+	From Martin Pring, "Martin Pring on Market Momentum"
+	(International Institute for Economic Research, 1993)
+	Copyright 2011, P.J.Kaufman. All rights reserved. }
+	
+{ It is recommended that data is weekly  }
+	
+	inputs:	slowperiod(24), medperiod(18), fasterperiod(12), fastperiod(9);
+	vars:		w4(4), w3(3), w2(2), w1(1), ROC4(0), ROC3(0), ROC2(0), ROC1(0), KST(0);
+	
+	ROC4 = rateofchange(close,slowperiod);
+	ROC3 = rateofchange(close,medperiod);
+	ROC2 = rateofchange(close,fasterperiod);
+	ROC1 = rateofchange(close,fastperiod);
+	
+	KST = w4*average(ROC4,9) + w3*average(ROC3,9) +
+				w2*average(ROC2,6) + w1*average(ROC1,6);
+	
+					
+	plot1(KST,"KST");
+	

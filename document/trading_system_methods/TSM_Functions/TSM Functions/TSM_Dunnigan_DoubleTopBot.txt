@@ -1,0 +1,80 @@
+{ TSM_Dunnigan_DoubleTopBot
+	Identifies a double top or bottom
+	by Murray Ruggiero, "Dunnigan's way," Futures, November 1998
+	Adapted by P.J.Kaufman }
+
+{ function returns 0 if a bottom, 1 if a top } {What if neither??}
+	inputs: 	strntype(numeric), topbot(numeric), near(numeric), win(numeric);
+	vars:		trend(0), STtrend(0), LTtrend(0), downtrend(false), uptrend(false),
+				curlow(999999), curhigh(-99999), CTlow(0), CThigh(0), scale(0),
+				curhighdate(0), curlowdate(0), doubletopbot(0);
+	arrays:	lasthigh[3](0), lastlow[3](0), dateofhigh[3](0), dateoflow[3](0);
+
+{ define and uptrend and downtrend }	
+	if strntype = 0 then begin
+			downtrend = high < high[1] and low < low[1];
+			uptrend = high > high[1] and low > low[1];
+			end
+		else if strntype = 1 then begin
+			downtrend = high < high[1] and low < low[1] and high[1] < high[2] and low[1] < low[2];
+			uptrend = high > high[1] and low > low[1] and high[1] > high[2] and low[1] > low[2];
+		end;
+		
+{ define a short-term downternd when prices make lower highs and lows, 
+	confirmed when prices fall below the low of the current uptrend }	
+	if downtrend = true and low < CTlow then STtrend = -1;
+{ a short-term uptrend is the opposite }
+	if uptrend = true and high > CThigh then STtrend = 1;
+	
+{ record current counter low in short-term uptrend and high in a downtrend }
+	if STtrend = 1 and high > curhigh and high > high[1] then CTlow = low;
+	if STtrend = -1 and low < curlow and low < low[1] then CThigh = high;
+	
+{ reset current high or low in the direction of the short-term trend when trend changes }
+	if STtrend = -1 and curlow > low then begin
+			curlow = low;
+			curlowdate = datetojulian(date);
+			end
+		else if STtrend = 1 and curhigh < high then begin
+			curhigh = high;
+			curhighdate = datetojulian(date);
+		end;
+		
+{ new uptrend, shift and save last lows and dates }		
+	if STtrend = 1 and STtrend[1] <> 1 then begin
+			lastlow[2] = lastlow[1];
+			lastlow[1] = lastlow[0];
+			lastlow[0] = curlow;
+			curlow = low;
+			dateoflow[2] = dateoflow[1];
+			dateoflow[1] = dateoflow[0];
+			dateoflow[0] = curlowdate;
+			end
+		else if STtrend = -1 and STtrend[1] <> -1 then begin
+			lasthigh[2] = lasthigh[1];
+			lasthigh[1] = lasthigh[0];
+			lasthigh[0] = curhigh;
+			curhigh = high;
+			dateofhigh[2] = dateofhigh[1];
+			dateofhigh[1] = dateofhigh[0];
+			dateofhigh[0] = curhighdate;
+		end;
+		
+{ record current high and low of short-term trend }
+	doubletopbot = 0;	
+	if topbot = 0 then value1 = TSM_Dunnigan_Choose3low(lastlow[0],lastlow[1],lastlow[2],low)
+		else if topbot = 1 then value1 = TSM_Dunnigan_Choose3high(lasthigh[0],lasthigh[1],lasthigh[2],high);
+	if topbot = 0 then begin
+			if minlist(absvalue(low - lastlow[0]),absvalue(low - lastlow[1]),absvalue(low - lastlow[2])) < near*avgtruerange(3) 
+				and datetojulian(date) - dateoflow[value1] > win and low > low[1] then doubletopbot = 1;
+			end
+		else if topbot = 1 then begin
+			if minlist(absvalue(high - lasthigh[0]),absvalue(high - lasthigh[1]),absvalue(high - lasthigh[2])) < near*avgtruerange(3) 
+				and datetojulian(date) - dateofhigh[value1] > win and high < high[1] then doubletopbot = 1;
+		end;
+		
+TSM_Dunnigan_DoubleTopBot = doubletopbot;
+		
+		
+		
+		

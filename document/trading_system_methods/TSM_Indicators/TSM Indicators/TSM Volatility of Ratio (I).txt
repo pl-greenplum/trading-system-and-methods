@@ -1,0 +1,13 @@
+{ TSM Volatility of Ratio 
+  Copyright 2011, P.J.Kaufman. All rights reserved.
+  Plots the volatility of a spread ratio }
+  
+  inputs: period(20);
+  vars:	 ratio(0), AVol(0);
+  
+  ratio = close/Close of data2;
+  AVol = stddev(ratio,period)*squareroot(252);
+   
+  plot1(AVol,"AnnVol");
+  
+  

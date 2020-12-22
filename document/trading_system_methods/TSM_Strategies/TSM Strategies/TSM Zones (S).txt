@@ -1,0 +1,51 @@
+[LegacyColorValue = true]; 
+
+{ TSM Zones : Intraday trading zones
+  Copyright 1999, P.J.Kaufman. All rights reserved.
+  Based on J. T. Jackson, "Detecting High Profit Day Trades In The Futures Markets"
+  (Windsor Books, 1994)
+
+  NOTES:	There are 6 zones separated by 5 lines
+		DATA1 is 10 minute data
+		DATA2 is daily data  }
+
+	inputs: 	length(1);
+	vars:		high2(0), high1(0), avg(0), low1(0), low2(0), avghlc(0),
+				top(0), bot(0), midpt(0);
+
+	if date <> date[1] then begin
+		avghlc = (high of data2 + low of data2 + close of data2) / 3.;
+		avg = average(avghlc,length);
+		top = highest(high of data2,length);
+		bot = lowest(low of data2,length);
+		high2 = avg[1] + top[1] - bot[1];
+		high1 = 2*avg[1] - bot[1];
+		low1 = 2*avg[1] - top[1];
+		low2 = avg[1] + bot[1] - top[1];
+		midpt = (high1 + low1) / 2.;
+		end;
+
+	if low <= low1 and low[1] > low1 then begin
+			Buy This Bar  at close;
+			Sell Next Bar  at low2 stop;
+			Sell Next Bar  at midpt limit;
+			end
+		else if high >= high1 and high[1] < high1 then begin
+			Sell Short This Bar  at close;
+			Buy to Cover Next Bar  at high2 stop;
+			Buy to Cover Next Bar  at midpt limit;
+			end;
+	if marketposition = 1 then begin
+		Sell Next Bar  at low2 stop;
+		Sell Next Bar  at midpt limit;
+		end;
+	if marketposition = -1 then begin
+		Buy to Cover Next Bar  at high2 stop;
+		Buy to Cover Next Bar  at midpt limit;
+		end;
+
+{ verification of zones and signals in PrintLog }
+{	print ("daily ",date of data2:7:0,high of data2:5:1, low of data2:5:1,
+		 close of data2:5:1," 10m ", time:5:0, high:5:1, low:5:1, close:5:1);
+	print(" zones: ",high2:5:1, high1:5:1, midpt:5:1, low1:5:1, low2:5:1," pos=", marketposition:3:0);
+	}

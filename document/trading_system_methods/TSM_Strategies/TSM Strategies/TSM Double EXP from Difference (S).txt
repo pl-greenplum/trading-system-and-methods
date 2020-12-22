@@ -1,0 +1,21 @@
+[LegacyColorValue = true]; 
+
+{ TSM Double EXP from difference
+  Copyright 2011 P J Kaufman. All rights reserved. }
+
+{ period = length of calculaton
+  crossoption =0 using trendline, =1 use price crossing trendline
+}
+  input: longperiod(18), shortperiod(8), difference(9), investment(100000);
+  vars:	MAlong(0), MAshort(0), size(0), diff(0);
+
+	MAlong = xaverage(close,longperiod);
+	MAshort = xaverage(close,shortperiod);
+	size = investment/(AvgTrueRange(longperiod)*bigpointvalue);
+	
+	diff = MAshort - MAlong;
+	If diff > xaverage(diff,difference) then Buy size contracts next bar at market
+		Else if diff < xaverage(diff,difference) then sell short size contracts next bar at market;
+			
+
+	

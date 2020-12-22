@@ -1,0 +1,12 @@
+{ TSM standard deviation moving average
+  Copyright 2011, P.J.Kaufman.  All rights reserved. }
+
+	inputs: 	period(40);
+	vars:		SD(0), SDV(0), stdavg(0);
+	
+	
+	SD = stddev(close,period);
+	SDV = (SD - SD[1])/SD;
+	StdAvg = Average(close,period/2) + .05*SDV;
+	
+	plot1(stdavg,"StdAvg");

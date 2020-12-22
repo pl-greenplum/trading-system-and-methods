@@ -1,0 +1,18 @@
+[LegacyColorValue = true]; 
+
+{ TSMKeyReversal : Key reversal days
+  Copyright 1999,2011 P.J.Kaufman. All rights reserved.
+
+  Function returns a 1 if a key reversal to the upside, and
+	a -1 if a key reversal to the downside.
+}
+  inputs: phigh(numericseries), plow(numericseries), pclose(numericseries),
+          length(numericsimple);
+  vars:   avg(0);
+
+  TSMKeyReversal = 0;
+  avg = average(pclose,length);
+  if pclose[1] > avg and phigh > highest(phigh,length)[1] and plow < plow[1] and
+	pclose < close[1] then TSMKeyReversal = -1;
+  if pclose[1] < avg and plow < lowest(plow,length)[1] and phigh > phigh[1] and
+	pclose > close[1] then TSMKeyReversal = 1;

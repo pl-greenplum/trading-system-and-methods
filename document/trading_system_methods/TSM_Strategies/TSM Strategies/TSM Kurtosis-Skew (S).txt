@@ -1,0 +1,51 @@
+{ TSM Kurtosis-Skew
+	Copyright 2003, 2011, P.J.Kaufman. All rights reserved.
+	
+	This program is a modified version of "PriceDist BO_FD" provided as part
+	of the Omega Research System Trading and Development Club. For information
+	on the club and other TradeStation educational services, see the
+	TradeStation website.}
+
+{ 	Notes:
+	1. Data1 is normally intraday data and data2 is daily data of the same market. 
+	2. Kurtosis can only cross below zero if this is excess kurtosis }
+
+	inputs:	trdtype(3), kurtlen(40), skewlen(15), exbars(10), stppts(5),
+				volmin(0.8), volmax(1.1), ATRlen(10);
+	vars:		mp(0), stopprice(0), kurt(0), skewv(0), vol(0);
+	
+	kurt =  kurtosis(close,kurtlen);
+	skewv = skew(close,skewlen);
+	vol = average(truerange of data2,ATRlen);
+	
+{ Entry rules - Breakout }
+	if (trdtype = 1 or trdtype = 3) and vol > volmin and kurt crosses under 0 then begin
+{ Test  maximum volatility }
+		if vol < volmax or volmax = 0 then begin
+				if skewv > 0 then buy ("BO-Long") 1 contract this bar at close
+					else if skewv < 0 then sell short ("BO-short") 1 contract this bar at close;
+				end
+{ exit only if volatility exceeds maximum  }				
+			else begin
+				if skewv > 0 then sell ("BO-XS") all contracts this bar at close
+					else if skewv < 0 then buy to cover ("BO-XL") this bar at close;
+			end;
+		end;
+		
+{ Entry rules - Fade }
+	if (trdtype = 2 or trdtype = 3) and vol > volmin and kurt crosses above 0 then begin
+		if skewv < 0 then buy ("FD-Long") 1 contract	this bar at close
+			else if skewv > 0 then sell short ("FD-Short") 1 contract this bar at close;
+		end;
+		
+{ Stop-loss orders }		
+	if exbars <> 0 then begin
+{ long exit }
+		Sell ("LLstop") all contracts next bar at lowest(low,exbars) - stppts points stop;
+{ short exit }
+		Buy to cover ("HHstop") all contracts next bar at highest(high,exbars) + stppts points stop;
+		end;
+		
+	
+if Condition1 then
+	Buy ( "Entry Name" ) next bar at market ;

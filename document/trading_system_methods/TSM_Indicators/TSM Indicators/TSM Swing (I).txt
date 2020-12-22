@@ -1,0 +1,90 @@
+[LegacyColorValue = true]; 
+
+{ TSM Swing:  Plots swing highs and lows
+  Copyright 1994-1999, P.J. Kaufman.  All rights reserved. 
+
+   Plot setup: 
+	1. Place on same graph window as price
+	2. Scale same as price
+	3. In style, set both values to "point" with weight 2
+
+  Inputs for TSM SWING:
+	type 	= 0, normal price
+			= 1, 3-month rate
+			= 2, bond price at par
+     swing 	= price swing in whole % (e.g., 2% = 2.0)  }
+
+   input: type(0), swing(2.5);
+   vars:  pcswing(0), last(0), curhigh(0), curlow(0), swhigh(0), swlow(0) , highbar(0),
+			lowbar(0), chighbar(0), clowbar(0), lowp(0), highp(0), xclose(0), xhigh(0),
+			xlow(0), divide(4), factor(1), par(800);
+
+   pcswing = swing / 100.;
+
+	if type = 0 then begin
+			xhigh = high;
+			xlow = low;
+			xclose = close;
+			end
+		else if type = 1 then begin
+			xhigh = 100 - low;
+			xlow = 100 - high;
+			xclose = 100 - close;
+			end
+		else if type = 2 then begin
+			xhigh = par / low;
+			xlow = par / high;
+			xclose = par / close;
+			end;
+
+{ INITIALIZE MOST RECENT HIGH AND LOW }
+  if currentbar = 1 then begin
+      curhigh = xclose;			{ current high }
+      curlow  = xclose;			{ current low }
+      end;
+                
+{ SEARCH FOR A NEW HIGH -- favor reversals }
+   if last<>1 then begin
+   { REVERSE FROM HIGH IF MINIMUM % SWING }
+      if xlow < curhigh - curhigh*pcswing then begin
+         last = 1;					{ last high fixed }
+         swhigh   = curhigh;		{ new verified high }
+         highbar   = chighbar;
+         curlow = xlow;			{ initialize new lows }
+         lowp = xlow;				{ swing low for plot }
+         clowbar = currentbar;
+		if type = 0 then
+			plot1[currentbar - highbar](high[currentbar - highbar]*1.01,"swinghigh")
+		else
+			plot3[currentbar - highbar](low[currentbar - highbar]*.99,"swinglow");
+         end
+      else begin
+      if xhigh > curhigh then begin
+         curhigh = xhigh;          { new current high }
+         chighbar = currentbar;
+         end;
+      end;
+   end;
+
+{ SEARCH FOR A NEW LOW - favor reversal }
+   if last <> -1 then begin
+{ REVERSAL FROM LOW IF MINIMUM % SWING }
+   if xhigh > curlow + curlow*pcswing then begin
+      last = -1;
+      swlow   = curlow;
+      lowbar   = clowbar;
+      curhigh = xhigh;          { initialize current high }
+      highp = xhigh;               { swing high for plot }
+      chighbar = currentbar;
+      if type = 0 then 
+		plot2[currentbar - lowbar](low[currentbar - lowbar]*.99,"swinglow")
+	else
+		plot4[currentbar - lowbar](high[currentbar - lowbar]*1.01,"swinghigh");
+      end
+   else begin
+      if xlow < curlow then begin
+         curlow = xlow;
+         clowbar = currentbar;
+         end;
+      end;
+   end;

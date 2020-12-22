@@ -1,0 +1,53 @@
+[LegacyColorValue = true]; 
+
+{ TSM5 Outside Day with an Outside Close
+  Copyright 2011 P.J. Kaufman. All rights reserved. }
+
+	input:	exitdays(3);
+	vars: 	debug(true), size(0), status(" "),
+				investment(25000),
+				meanreversion(true);
+
+{ Exit trades after "exitdays" }
+	If Marketposition <> 0 and barssinceentry >= exitdays then begin
+		If Marketposition > 0 then sell this bar on close
+			Else if Marketposition < 0 then buy to cover this bar on close;
+		end;
+
+{ Enter trades }
+	status = " ";
+	If High > high[1] and low < low[1] then begin
+		Status = "outside";
+		size = investment/(AvgTrueRange(10)*bigpointvalue);
+		If meanreversion = False then begin
+			If Close < low[1] then begin
+					status = "outside low";
+					sell short size contracts this bar on close;
+					end
+				Else if Close > high[1] then begin
+					status = "outside high";
+					buy size contracts this bar on close;
+				end;
+			end;
+		If meanreversion = True then begin
+			If Close < low[1] then begin
+					status = "outside low";
+					buy size contracts this bar on close;
+					end
+				Else if Close > high[1] then begin
+					status = "outside high";
+					sell short size contracts this bar on close;
+				end;
+			end;
+		
+		end;
+
+{ print detail for debugging }
+	if currentbar = 1 then
+		print (file("c:\tradestation\OutsideDay.csv"),
+				"Date,High,Low,Close,status,size,marketposition,openPL,netPL");
+
+	print (file("c:\tradestation\OutsideDay.csv"),date:7:0,",",high:5:4,",",low:5:4,",",close:5:4,",",
+			status,",",size:5:0,",",marketposition:4:0,",",openpositionprofit:8:0,",",netprofit:8:0);
+						
+			

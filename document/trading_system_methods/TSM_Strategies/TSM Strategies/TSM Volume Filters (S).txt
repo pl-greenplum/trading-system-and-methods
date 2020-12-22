@@ -1,0 +1,204 @@
+[LegacyColorValue = true]; 
+
+{ TSM Volume Filters:  Create a volume filter using one of the indicators
+  Copyright 1995-1999, P.J. Kaufman.  All rights reserved.
+
+  Volume filters are applied to a moving average trend system
+  Trades are exited and not entered when the volume indicator diverges
+	from the direction of the moving average
+
+  Inputs are:
+		"period,"	moving average calculation period
+		"ttype,"	the type of volume indicator
+		"Kopt,"		0, use all volume; 1, use volume if > npsd*sd
+		"maxdn,"	indexed (percentage) moving average divergence criteria??
+		"maxdvg," divergence criteria
+		"npsd,"		minimum volume criteria for not including volume data
+		"ddays,"	moving average lag period for indexing   }
+
+  inputs:  period(20), ttype(1), Kopt(0), maxdn(0), maxdvg(0), npsd(.5), ddays(3);
+  vars:  px(0), vx(0), Kvol(0), map(0), mav(0), sdiff(0), madays(0),
+            ma(0), dvg(0), pchg(0), sdpchg(0), nd(0), madiff(0), avgv(0), sdv(0),
+            tentry(0), avg2(0), type(0), sc(0), avghl(0), signhl(0), HPX(0);
+
+  { Exit type  = 1, On-Balance Volume 
+                    = 2, Chiaken Volume Accumulator
+                    = 3, Negative Volume Index
+                    = 4, Positive Volume Index
+                    = 5, Price and Volume Trend
+                    = 6, Volume oscillator (npsd used for exit level)
+                    = 7, Volume rate of change
+                    = 8, Low volume exit 
+                    = 9, Herrick Payoff Index (uses vol and openint)
+     For entry filter use negative type
+
+    Kopt  = 1, Add to Kvol only if price change is > npsd*sd
+                 applies to type 1-6 }
+
+   { test exit }
+      type = ttype;
+      if type < 0 then begin
+         tentry = 1;
+         type = absvalue(ttype);
+         end;
+
+   { price index }
+    map = average(close,period);
+    pchg = absvalue(close-close[1]);
+    sdpchg = stddev(pchg,period);
+    
+    if ddays < 1 then nd = 1 else nd = ddays;
+
+    if map[nd] = 0 then px = 0
+       else px = (map - map[nd])*100 / map[nd];
+
+  { On-Balance Volume }
+    if type = 1 then begin
+       if Kopt = 0 or (Kopt = 1 and pchg > npsd*sdpchg) then begin
+          if close > close[1] then Kvol = Kvol + volume
+             else if close < close[1] then Kvol = Kvol - volume;
+          end
+          else Kvol = Kvol[1];
+       end;
+
+  { Chaiken Volume Accumulator }
+    if type = 2 then begin
+       if Kopt = 0 or (Kopt = 1 and pchg > npsd*sdpchg) then
+          Kvol = Kvol + (((close - low) / (high - low)) - .5)*2*volume
+          else Kvol = Kvol[1];
+       end;
+
+  { Negative Volume Index }
+     if type = 3 then begin
+        if volume < volume[1] and (Kopt = 0 or 
+           (Kopt = 1 and pchg > npsd*sdpchg)) then 
+              Kvol = Kvol[1] + (close - close[1])*Kvol/close[1]
+           else if Kvol = 0 then Kvol = volume
+           else Kvol = Kvol[1];
+{       print (Kopt:2:0, close:3:2, volume:7:0, pchg:3:2, 
+                 npsd*sdpchg:3:2,Kvol:7:0, Kvol[1]:7:0);  }
+        end;
+
+  { Positive Volume Index }
+     if type = 4 then begin
+        if volume > volume[1] and (Kopt = 0 or 
+           (Kopt = 1 and pchg > npsd*sdpchg)) then 
+              Kvol = Kvol[1] + (close - close[1])*Kvol[1]/close[1]
+           else if Kvol = 0 then Kvol = volume
+           else Kvol = Kvol[1];
+        end;
+
+  { Price and Volume Trend }
+     if type = 5 then begin
+       if Kopt = 0 or (Kopt = 1 and pchg > npsd*sdpchg) then
+          Kvol = Kvol + volume*(close - close[1]) / close[1]
+          else Kvol = Kvol[1];
+       end;
+
+  { Herrick Payoff Index }
+     if type = 9 then begin
+        sc = 1/(period + 1);
+        avghl = (high - low)/2;
+        signhl = (avghl - avghl[1])/absvalue(avghl - avghl[1]);
+        HPX = 100*volume*(avghl - avghl[1])*(1+signhl*2*
+                  absvalue(openint - openint[1])/highest(openint,2))/100000;
+        Kvol = Kvol[1] + sc*(HPX - Kvol[1]);
+
+{        if volume < volume[1] and (Kopt = 0 or 
+           (Kopt = 1 and pchg > npsd*sdpchg)) then 
+              Kvol = Kvol[1] + (close - close[1])*Kvol/close[1]
+           else if Kvol = 0 then Kvol = volume
+           else Kvol = Kvol[1];
+}
+        print (Kopt:2:0, volume:7:0, openint:7:0, avghl:4:2, signhl:4:1, HPX:6:2, 
+                 Kvol:7:0, Kvol[1]:7:0);
+        end;
+
+  { Volume oscillator }
+     if type = 6 then begin
+        Kvol = (average(volume,ddays) - average(volume,period))
+                         *100/average(volume,ddays);
+        end;
+
+  { Volume rate-of-change }
+     if type = 7 then begin
+        if Kvol = 0 then Kvol = volume;
+        if volume[period] = 0 then Kvol = Kvol[1]
+           else Kvol = (volume - volume[period])*100/volume[period];
+        end;
+
+  { Moving average of price }
+    madays = 2*period;
+    ma = average(close,madays);
+    madiff = ma - ma[nd];
+
+    if type < 6 or type = 9 then begin
+       mav = average(Kvol,period);
+       if mav[nd] = 0 then vx = 0
+          else vx = (mav - mav[nd])*100/mav[nd];
+       sdiff = px - vx;
+  { record divergence only }
+       if vx*px < 0 then dvg = sdiff else dvg = 0;
+       if madiff > 0 and madiff[1] <= 0 then begin
+          Buy to Cover Next Bar  at market;
+          if tentry = 0 and (vx >= maxdn and absvalue(dvg) <= maxdvg) then Buy Next Bar  at market;
+          end;
+       if madiff < 0 and madiff[1] >= 0 then begin
+          Sell Next Bar  at market;
+          if tentry = 0 and (vx >= maxdn and absvalue(dvg) <= maxdvg) then Sell Short Next Bar  at market;
+          end;
+       if vx < maxdn and absvalue(dvg) > maxdvg then begin
+          Sell Next Bar  at market;
+          Buy to Cover Next Bar  at market;
+          end;
+       end;
+
+    if type = 6  or type = 7 then begin
+       avgv = average(Kvol,period);
+       sdv = stddev(Kvol,period);
+       if tentry = 0 then begin
+             if (madiff > 0 and madiff[1] <= 0) or Kvol <= avgv-npsd*sdv then 
+                Buy to Cover Next Bar  at market;
+             if (madiff < 0 and madiff[1] >= 0) or Kvol <= avgv-npsd*sdv then
+                Sell Next Bar  at market;
+             if madiff > 0 and madiff[1] <= 0 then Buy Next Bar  at market;
+             if madiff < 0 and madiff[1] >= 0 then Sell Short Next Bar  at market;
+            end
+            else begin
+               if madiff > 0 and madiff[1] <= 0 then Buy to Cover Next Bar  at market;
+               if madiff < 0 and madiff[1] >= 0 then Sell Next Bar  at market;
+               if madiff > 0 and madiff[1] <= 0 and Kvol <= avgv-npsd*sdv then
+                  Buy Next Bar  at market;
+               if madiff < 0 and madiff[1] >= 0 and  Kvol <= avgv-npsd*sdv then
+                  Sell Short Next Bar  at market;
+               end;
+       end;     
+
+  { Low volume exit, comparing slow and fast average }
+     if type = 8 then begin
+        avgv = average(volume,period);
+        avg2 = average(volume,ddays);
+
+        if tentry = 0 then begin
+              if (madiff > 0 and madiff[1] <= 0) or avg2 <= avgv*npsd then 
+                  Buy to Cover Next Bar  at market;
+              if (madiff < 0 and madiff[1] >= 0) or avg2 <= avgv*npsd then
+                  Sell Next Bar  at market;
+               if madiff > 0 and madiff[1] <= 0 then Buy Next Bar  at market;
+               if madiff < 0 and madiff[1] >= 0 then Sell Short Next Bar  at market;
+               end
+            else begin
+               if madiff > 0 and madiff[1] <= 0 then Buy to Cover Next Bar  at market;
+               if madiff < 0 and madiff[1] >= 0 then Sell Next Bar  at market;
+               if madiff > 0 and madiff[1] <= 0 and avg2 <= avgv*npsd then
+                  Buy Next Bar  at market;
+               if madiff < 0 and madiff[1] >= 0 and avg2 <= avgv*npsd then
+                  Sell Short Next Bar  at market;
+               end;
+         end;
+
+    print (date:6:0, close:4:2, volume:8:0, Kvol:10:0, map:4:2,
+             mav:8:1, px:5:2, vx:5:2,  sdiff:4:2);
+    print (File("C:volume.prn"),date:6:0, close:4:2,
+             volume:8:0, Kvol:10:0, map:4:2, mav:8:1, px:5:2, 
+             vx:5:2, sdiff:8:2);

@@ -1,0 +1,50 @@
+[LegacyColorValue = true]; 
+
+{ TSM Moving Average var size
+  Copyright 1994-1999,2011 P J Kaufman. All rights reserved. }
+
+{ period = length of calculaton
+  crossoption =0 using trendline, =1 use price crossing trendline
+  entrypriceoption = 0 buy/sell on current close
+  						 = 1 buy/sell on next open
+  						 = 2 buy/sell next close 
+  longonly			 true then only long positions
+}
+  input: period(40), crossoption(0), entrypriceoption(0), longonly(false);
+  vars:	signal(0), price(0), printPL(true), size(1), investment(1000), 
+  			allocation(0.10), ATRper(20), atrange(0);
+  			
+	atrange = avgtruerange(ATRper);
+	if atrange = 0 then 
+			size = 1
+		else
+			size = investment/(atrange*bigpointvalue); 
+			
+  	signal = TSM_MAsignal(period,crossoption);
+  	If entrypriceoption = 0 then begin
+  			if signal = 1 and marketposition <> 1 then Buy size contracts This Bar at close
+  			else if signal = -1 and marketposition <> -1 then begin
+  				If longonly then sell all contracts this bar on close
+  					else Sell Short size contracts This Bar at close;
+  				end;
+  			end
+  		Else if Entrypriceoption = 1 then begin
+  			If signal = 1 and marketposition <> 1 then buy size contracts next bar on open
+  			Else if signal = -1 and marketposition <> -1 then begin
+  				if longonly then sell all contracts this bar on close
+  					else sell short size contracts next bar on open;
+  				end;
+  			end
+  		Else if Entrypriceoption = 2 then begin
+  			If signal[1] = 1 and marketposition <> 1 then buy size contracts this bar at close
+  				Else if signal[1] = -1 and marketposition <> -1 then begin
+  					if longonly then sell all contracts this bar on close
+  						else sell short size contracts this bar at close;
+  				end;
+  		end;
+  	
+  	If printPL then begin
+  		If Currentbar = 1 then print(file("c:\TSM5\MA_PL_varsize.csv"), "Date,size,netPL");
+  		print(file("c:\TSM5\MA_PL_varsize.csv"),date:8:0, ",", size:8:3, ",", 
+  						netprofit + openpositionprofit:5:5);
+		end;

@@ -1,0 +1,20 @@
+{ TSM Volume Oscillator
+  Copyright 2011, P.J.Kaufman. All rights reserved. }
+  
+  inputs: type(0), shortperiod(14), longperiod(34);
+  vars:	 avg1(0), avg2(0), sum1(0), sum2(0), VOdiff(0), VOratio(0);
+  
+{ type 0 is diffence between short and long }  
+  If type = 0 then begin
+  		avg1 = average(volume,shortperiod);
+  		avg2 = average(volume,longperiod);
+  		VOdiff = avg1 - avg2;
+  		plot1(VOdiff,"VOdiff");
+  		End
+  	Else begin
+  		sum1 = summation(volume,shortperiod);
+  		sum2 = summation(volume,longperiod);
+  		VOratio = sum1/sum2;
+  		plot2(VOratio,"VOratio");
+  	end;
+  	

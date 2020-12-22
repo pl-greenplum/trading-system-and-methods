@@ -1,0 +1,31 @@
+[LegacyColorValue = true]; 
+
+{ TSM Outside Day : Outside Day with Outside Close
+   Copyright 1999, P.J.Kaufman. All rights reserved. 
+
+   This system buys/sells when the close is above/below the previous range
+    on an "outside" day. A stop is placed below/above the low/high of the 
+   outside day. The trade is closed out on the close of the n-th day. }
+
+	inputs:	length(2), hold(2);
+	vars:	entrybar(0), rhigh(0), rlow(0);
+
+	rhigh = highest(high,length)[1];
+	rlow = lowest(low,length)[1];
+	if high > rhigh and low < rlow then begin
+		if close > rhigh then begin 
+			Buy This Bar  on close;
+			entrybar = currentbar;
+			Sell Next Bar  at rlow stop;
+			end;
+		if close < rlow then begin
+			Sell Short This Bar  on close;
+			entrybar = currentbar;
+			Buy to Cover Next Bar  at rhigh stop;
+			end;
+		end;
+	
+	if marketposition <> 0 and currentbar - entrybar >= hold then begin
+		Sell This Bar  on close;
+		Buy to Cover This Bar  on close;
+		end;

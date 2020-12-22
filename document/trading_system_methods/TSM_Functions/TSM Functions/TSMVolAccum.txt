@@ -1,0 +1,9 @@
+[LegacyColorValue = true]; 
+
+{ TSMVolAccum : Volume Accumulator
+  Copyright 1998-1999, PJ Kaufman. All rights reserved } 
+
+  if high - low <> 0 then 
+		TSMVolAccum = TSMVolAccum[1] + ((close - low)/(high - low) - .50)* 2 * volume
+	else 
+		TSMVolAccum = TSMVolAccum[1];

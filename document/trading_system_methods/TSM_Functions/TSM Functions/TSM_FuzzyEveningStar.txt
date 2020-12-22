@@ -1,0 +1,16 @@
+{ FuzzyEveningStar function
+   From Murray A. Ruggiero, Jr., "Cybernetic Trading Systems" (Wiley, 1997) 
+   Returns O if not an evening star, size if it is }
+   
+inputs:  lookback(numeric), onecof(numeric), zerocof(numeric); 
+vars:	 	color(0), sbody(0), fuzzyrange(0), fuzzy(0);
+
+color = candlecolor(open,cclose);
+sbody = fuzzysmall(open,close,lookback,onecof*.3,zerocof*1.0);
+ 
+fuzzy = 0;
+fuzzyrange = close - (close[2] + open[2])/2;
+if color = -1 and color[2] = 1 and windowup(open,high,low,close,1)[1] > O 
+   and open > open[1] and fuzzyrange < O then 
+   fuzzy = minlist(sbody[1],1-sbody[2]); 
+ TSM_fuzzyeveningstar = fuzzy;

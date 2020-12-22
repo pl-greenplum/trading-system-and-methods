@@ -1,0 +1,22 @@
+{ TSM McClellan Oscillator
+  Copyright 2011, P.J.Kaufman. All rights reserved. }
+  
+  inputs:	period1(19), period2(39);
+  vars:		NA(0), s1(0), s2(0), E1(0), E2(0), McClellan(0);
+  
+  NA = High of data2 - Low of data2;
+  
+  If Currentbar = 1 then begin
+  	s1 = 2/(period1 + 1);
+  	s2 = 2/(period2 + 1);
+  	E1 = NA;
+  	E2 = NA;
+  	end;
+  
+  E1 = E1[1] + s1*(NA - E1[1]);
+  E2 = E2[1] + s2*(NA - E2[2]);
+  
+  McClellan = E1 - E2;
+  
+  Plot1(McClellan,"McClellan");
+  

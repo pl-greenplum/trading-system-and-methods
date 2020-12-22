@@ -1,0 +1,20 @@
+{ TSM Elder Ray
+	From Alex Elder, Trading for a Living (Wiley 1993)
+	Copyright 2011, P.J.Kaufman. All rights reserved. }
+	
+	inputs:	period(13);
+	vars:		EMA(0), smooth(0), bull(0), bear(0);
+	
+	if currentbar = 1 then begin
+			EMA = close;
+			smooth = 2/(period + 1);
+			end
+		else
+			EMA = EMA[1] + smooth*(close - EMA[1]);
+			
+	bull = high - EMA;
+	bear = low - EMA;			
+				
+	plot1(Bull,"Bull Power");
+	plot2(Bear,"Bear Power");
+	

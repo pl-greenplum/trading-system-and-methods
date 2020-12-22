@@ -1,0 +1,20 @@
+{ TSM Thrust Oscillator
+  Copyright 2011, P.J.Kaufman. All rights reserved. }
+  
+ { Volume data UVDV is data2:
+ 	High = advances
+ 	Low = declines
+ 	Volume = Up volume
+ 	OpInt = Down volume }
+  
+  vars:		Thrust(0);
+  
+  	If High of data2 <> 0 and volume <> 0 and low of data2 <> 0 and openint <> 0 then
+		Thrust = 100*(High of data2*Volume - Low of data2*openint)/
+				 (High of data2*Volume + Low of data2*openint);
+				    
+  Plot1(Thrust,"ThrustOsc");
+  Plot2(30,"30");
+  Plot3(-30,"-30");
+  
+  

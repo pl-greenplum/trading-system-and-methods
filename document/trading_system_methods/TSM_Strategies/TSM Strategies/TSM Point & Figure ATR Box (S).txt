@@ -1,0 +1,106 @@
+{ TSM Point & Figure variable box using ATR
+  Copyright 1994-1999,2011 P.J. Kaufman. All rights reserved. }
+
+{	 direction & breakout: 
+		+1 up, +2 up breakout
+		0 none
+		-1 dn, -2 down breakout 
+	signal rules:
+     	buy when upswing is at least one box above prior high box
+		sell when downswing is at least one box below prior low box }
+		
+{ box input is given as a percentage of price then converted to a point value }		
+
+	inputs:	period(50), ATRfactor(1), revboxes(3);
+	vars:		box(0), lastdir(0) , boxhigh(0), boxlow(0), newhigh(0), newlow(0), 
+				lastlow(0), lasthigh(0), trend(0), size(1);
+
+{ SWINGS: Initialize most recent high and low }
+{ ALLOW BOX SIZE TO CHANGE EACH DAY BASED ON THE CLOSING PRICE }
+	if currentbar = 1 then begin
+		box = avgtruerange(50)*ATRfactor;
+		boxhigh = intportion(close/box);
+		boxlow = intportion(close/box) + 1;
+		if mod(close,box) = 0 then boxlow = boxlow - 1;
+		if boxlow <= 0 then boxlow = low;
+		if close >= (high - low) / 2 then
+				lastdir = 1 
+			else 
+				lastdir = -1;
+		end;  
+
+{ DYNAMIC BOX SIZE USING AVERAGE TRUE RANGE }	                                  
+	box = avgtruerange(50)*ATRfactor;
+
+{ convert prices to boxes }
+	newhigh = intportion(high/box);
+	newlow = intportion(low/box) + 1;
+{	print(file("c:\TSM5\TSM_P&F2.csv"),date:7:0,",",high:5:4,",",low:5:4,",",close:5:4,
+		",lastH=,",lasthigh:4:0,",lastL=,",lastlow:4:0,",curH=,",newhigh:4:0,",curL=,",newlow:4:0); }
+	if mod(low,box) = 0 then boxlow = boxlow - 1;
+	if boxlow <= 0 then boxlow = low;
+
+{ Test for a continuation in the upwards direction }
+	if lastdir = 1 then begin
+			if newhigh > boxhigh then begin
+{				print(file("c:\TSM5\TSM_P&F2.csv"),"New high box in up column");}
+				boxhigh = newhigh;
+				boxlow = boxhigh + 1;
+{ Test for long signal }
+				if trend < 1 and newhigh > lasthigh then begin
+{					print(file("c:\TSM5\TSM_P&F2.csv"),"Trend changes to up");}
+					trend = 1;
+					buy size contracts this bar on close;
+					end;
+				end
+{ Failed new high, test for new low }
+	 		else if newlow < boxlow then begin
+{				print(file("c:\TSM5\TSM_P&F2.csv"),"New low box in up column");}
+				boxlow = newlow;
+{ Test if reversal to downside }
+				if boxhigh - boxlow >= revboxes then begin
+{					print(file("c:\TSM5\TSM_P&F2.csv"),"New down column begins");}
+					lastdir = -1;
+					lasthigh = boxhigh;
+					boxhigh = boxlow - 1;
+{ Test for a trend turn to the downside }
+					if trend > -1 and boxlow < lastlow then begin
+{						print(file("c:\TSM5\TSM_P&F2.csv"),"Trend changes to down");}
+						trend = -1;
+						sell short size contracts this bar on close;
+						end;
+					end;
+				end;
+			end
+
+{ Test for a continuation in the downwards direction }
+	else if lastdir = -1 then begin
+			if newlow <  boxlow then begin
+{				print(file("c:\TSM5\TSM_P&F2.csv"),"New low in down column");}
+				boxlow = newlow;
+				boxhigh = boxlow - 1;
+{ Test for short signal }
+				if trend > -1 and newlow < lastlow then begin
+{					print(file("c:\TSM5\TSM_P&F2.csv"),"Trend changes to down");}
+					trend = -1;
+					sell short size contracts this bar on close;
+					end;
+				end
+{ Failed new low, test for new high }
+	 		else if newhigh > boxhigh then begin
+				boxhigh = newhigh;
+{ Test if reversal to upside }
+				if boxhigh - boxlow >= revboxes then begin
+{					print(file("c:\TSM5\TSM_P&F2.csv"),"New up column begins");}
+					lastdir = 1;
+					lastlow = boxlow;
+					boxlow = boxhigh + 1;
+{ Test for a trend turn to the upside }
+					if trend < 1 and boxhigh > lasthigh then begin
+{						print(file("c:\TSM5\TSM_P&F2.csv"),"Trend changes to up");}
+						trend = 1;
+						buy size contracts this bar on close;
+						end;
+					end;
+				end;
+			end;

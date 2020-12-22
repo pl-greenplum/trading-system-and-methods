@@ -1,0 +1,12 @@
+[LegacyColorValue = true]; 
+
+{TSMBodyMomentum: Candlestick Momentum of the "Body"
+ Copyright 1999, P.J.Kaufman. All rights reserved. }
+
+{	Using 14 bars as input, a body momentum greater than
+	70 indicates that white dominates; a value less than 20
+	indicates that black dominates. }
+
+	inputs: length(14);
+
+	plot1(TSMBodyMomentum(length),"TSMbody");

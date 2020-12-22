@@ -1,0 +1,37 @@
+{ TSM5 Regression with bands
+	Copyright 2011, P.J.Kaufman. All rights reserved. }
+	
+	inputs: 	period(20), factor(2.0), percentage(2.0);
+	vars:		MA(0), UB1(0), LB1(0), UB2(0), LB2(0), UB3(0), LB3(0), 
+				UB4(0), LB4(0), diff(0);
+	
+	MA = average(close,period);
+	
+{ percentage of trendline, scaled bands }
+	UB1 = MA + MA*(percentage/100)*factor;	
+	LB1 = MA - MA*(percentage/100)*factor;	
+	plot1(UB1,"UB1");
+	plot2(LB1,"LB1");
+	
+{ percentage of price }	
+	UB2 = MA + close*(percentage/100)*factor;	
+	LB2 = MA - close*(percentage/100)*factor;	
+	plot3(UB2,"UB2");
+	plot4(LB2,"LB2");
+	
+{ ATR }
+	UB3 = MA + factor*AvgTrueRange(period);	
+	LB3 = MA - factor*AvgTrueRange(period);	
+	plot5(UB3,"UB3");
+	plot6(LB3,"LB3");
+	
+{ Annualized vol }
+	diff = Close - close[1];
+	UB4 = MA + factor*stddev(diff,period){*sqrt(252)};
+	LB4 = MA - factor*stddev(diff,period){*sqrt(252)};
+	plot7(UB4,"UB4");
+	plot8(LB4,"LB4");
+		
+		
+
+		

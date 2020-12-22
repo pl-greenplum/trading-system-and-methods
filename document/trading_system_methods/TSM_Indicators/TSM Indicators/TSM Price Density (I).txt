@@ -1,0 +1,8 @@
+[LegacyColorValue = true]; 
+
+{ TMS Price Density : Price Density 
+  Copyright 1999 P J Kaufman.  All rights reserved. }
+  
+	input:	period(20);
+
+	plot1(TSMPriceDensity(period),"TMSpd");

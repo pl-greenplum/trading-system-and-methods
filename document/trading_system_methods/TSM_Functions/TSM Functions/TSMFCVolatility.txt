@@ -1,0 +1,24 @@
+[LegacyColorValue = true]; 
+
+{ TSMFCVolatility : Volatility function
+   Copyright 1999, Francesco Cavasino. All rights reserved. Used with permission.
+   Piazza De Gasperi, 3
+   20091 Bresso (Milano) Italy
+   Telephone (011 39335) 835 6827   
+   email: stoch@tin.it
+
+   Reference: F. Cavasino, "FC StochVol, Volatility analysis," MTA Journal  Summer/Fall 1997,
+	 (Market Technicians Association, 4 World Trade Center, New York)}
+
+	inputs: item(numeric), len(numericsimple);
+	vars: xx(0);
+
+	xx = item/item[1];
+
+	if currentbar > len then begin
+		if item[1] <> 0 then 
+				TSMFCVolatility = ((average(log(xx),len) + 
+					stddev(log(xx),len)) * squareroot(252)) 
+			else 
+				TSMFCvolatility = 0;
+    		end;

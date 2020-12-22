@@ -1,0 +1,10 @@
+{ Sibbett's Demand Index
+  Copyright 2011, P.J.Kaufman. All rights reserved. }
+  
+  inputs: period(10);
+  vars:	 DI(0);
+  
+  DI = summation(high of data2,period)/summation(low of data2,period);
+  
+  plot1(DI,"Demand");
+  

@@ -1,0 +1,102 @@
+[LegacyColorValue = true]; 
+
+{SYSTEM: Gap  Study }
+{ Copyright 1978-1999, 2011. PJ Kaufman. All rights reserved. }
+
+{ option =0, use prices
+			=1, use returns }
+			
+	Inputs:	returnoption(0), gapincr(0), nbars(20);
+	vars:	ix(0), n(0), n2(0), min(0), gap(0), ngap(0), middle(0), cases(0),
+			actualgap(0);
+	arrays:	maxmin[50](0), ccont[50](0), cbelow[50](0), crev[50](0), trcross[50](0),
+		tradj[50](0), trcont[50](0), ncont[50](0), nitems[50](0) ;
+		
+{ Initialize increments }
+	if currentbar = 1 then begin
+		n = nbars + 1;
+		n2 = intportion(n/2);
+		middle = n2 + 1;
+		min = -n2*gapincr;
+		If returnoption = 1 then min = min*100;
+		for ix = 1 to n begin
+			maxmin[ix] = min;
+			If returnoption = 1 then 
+					min = min + 100*gapincr
+				else
+					min = min + gapincr;
+			end;
+		print (file("c:\TSM5\gapout.csv"), 
+				"Gap,Cases,Cont Dir,Below Open,Rev Dir,Cross Prev Close,",
+				"Adj from Open, Cont Only,Cont Next Day");
+		end;
+		
+{ Process gap }
+	if open <> close[1] then begin
+		If returnoption = 0 then begin
+				actualgap = (open - close[1]);
+				gap = actualgap / gapincr; {in points}
+				End
+			Else begin
+				actualgap = 100*(open - close[1])/close[1]; {in returns}
+				gap = actualgap/gapincr;
+			end;
+		
+		if gap > 0 then begin
+			ngap = intportion(gap) + middle + 1;
+			if ngap > n then ngap = n;
+			end;
+		if gap < 0 then begin
+			ngap = middle - 1 + intportion(gap); {gap is negative}
+			if ngap < 1 then ngap = 1;
+			end;
+		nitems[ngap] = nitems[ngap] + 1;
+		
+{		print (file("c:\TSM5\gapout.csv"), date:8:0, ",", close[1]:5:5, ",", open:5:5, ",",
+			actualgap:5:5, ",", gap:5:5, ",", ngap:5:0); }
+		
+{ Relative position of today's close }
+		if (gap > 0 and close > open) or (gap < 0 and close < open) then
+			ccont[ngap] = ccont[ngap] + 1;
+		if (gap > 0 and close > close[1] and close < open) or
+			(gap < 0 and close < close[1] and close > open) then
+			cbelow[ngap] = cbelow[ngap] + 1;
+		if (gap > 0 and close < close[1]) or (gap < 0 and close > close[1]) then
+			crev[ngap] = crev[ngap] + 1;
+{ Pattern of entire trading range }
+		if (gap > 0 and low < close[1]) or (gap < 0 and high > close[1]) then
+			trcross[ngap] = trcross[ngap] + 1;
+		if (gap > 0 and low > close[1] and low < open) or
+			(gap < 0 and high < close[1] and high > open) then
+			tradj[ngap] = tradj[ngap] + 1;
+		if (gap > 0 and low >= open) or (gap < 0 and high <= open) then
+			trcont[ngap] = trcont[ngap] + 1;
+{ Continue next day }
+		if( gap[1] > 0 and open > close[1]) or 
+			(gap[1] < 0 and open < close[1]) then
+			ncont[ngap] = ncont[ngap] + 1;
+		end
+	else 
+		nitems[middle] = nitems[middle] + 1;
+		
+	if lastbaronchart then begin
+		print (file("c:\TSM5\gapout.csv"), "Results in frequency");
+		for ix = n downto 1 begin
+			print (file("c:\TSM5\gapout.csv"), maxmin[ix]:4:3, ",", nitems[ix]:5:0, ",",
+			ccont[ix]:5:0, ",", cbelow[ix]:4:0, ",", crev[ix]:4:0, ",", trcross[ix]:5:0, ",",
+			tradj[ix]:4:0, ",", trcont[ix]:4:0, ",", ncont[ix]:5:0);
+			end;
+		
+		print (file("c:\TSM5\gapout.csv"), " ");
+		print (file("c:\TSM5\gapout.csv"), "Results in percentages");
+		for ix = n downto 1 begin
+			cases = nitems[ix];
+			if cases = 0 then 
+					print (file("c:\TSM5\gapout.csv"), maxmin[ix]:4:3, ",", nitems[ix]:5:0, ",0,0,0,0,0,0,0")
+				else
+					print (file("c:\TSM5\gapout.csv"), maxmin[ix]:4:2, ",", nitems[ix]:5:0, ",",
+						100*ccont[ix]/cases:5:2, ",", 100*cbelow[ix]/cases:4:2, ",", 100*crev[ix]/cases:4:2, ",",
+						100*trcross[ix]/cases:5:2, ",", 100*tradj[ix]/cases:4:2, ",", 100*trcont[ix]/cases:4:2, ",", 
+			 			100*ncont[ix]/cases:5:2);
+			end;
+		end;

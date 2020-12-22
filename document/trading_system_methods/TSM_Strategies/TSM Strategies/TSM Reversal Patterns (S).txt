@@ -1,0 +1,63 @@
+[LegacyColorValue = true]; 
+
+{ TSM Reversal Patterns }
+{ Copyright 1985-1999, 2011. PJ Kaufman. All rights reserved. }
+{ New reversal study for "Trading Systems and Methods"
+	Each of the following based on direction of current pattern:
+	1. Continued trend (higher high, higher close, then next open and close
+	2. Reversal: Higher high, lower close, then next open and close
+	3. Outside Reversal: Higher high, close below prior low, then next open and close }
+
+	vars:	trend(0), TUopen(0), TUclose(0), TDopen(0), TDclose(0),
+			RUopen(0), RUclose(0), RDopen(0), RDclose(0),
+			EUopen(0), EUclose(0), EDopen(0), EDclose(0),
+			nTU(0), nTD(0), nRU(0), nRD(0), nEU(0), nED(0);
+
+	trend = close - close[5];
+
+{ Continued trend }
+	if high[1] > high[2] and close[1] > close[2] then begin
+		nTU = nTU + 1;
+		if open > close[1] then TUopen = TUopen + 1;
+		if close > close[1] then TUclose = TUclose + 1;
+		end;
+	if low[1] < low[2] and close[1] < close[2] then begin
+		nTD = nTD + 1;
+		if open < close[1] then TDopen = TDopen + 1;
+		if close < close[1] then TDclose = TDclose + 1;
+		end;
+
+{ Reversal }
+	if high[1] > high[2] and close[1] < close[2] then begin
+		nRU = nRU + 1;
+		if open < close[1] then RUopen = RUopen + 1;
+		if close < close[1] then RUclose = RUclose + 1;
+		end;
+	if low[1] < low[2] and close[1] > close[2] then begin
+		nRD = nRD + 1;
+		if open > close[1] then RDopen = RDopen + 1;
+		if close > close[1] then RDclose = RDclose + 1;
+		end;
+
+{ Extreme Reversal }
+	if high[1] > high[2] and close[1] < low[2] then begin
+		nEU = nEU + 1;
+		if open < close[1] then EUopen = EUopen + 1; 
+		if close < close[1] then EUclose = EUclose + 1;
+		end;
+	if low[1] < low[2] and close[1] > high[2] then begin
+		nED = nED + 1;
+		if open > close[1] then EDopen = EDopen + 1;
+		if close > close[1] then EDclose = EDclose + 1;
+		end;
+
+	if lastcalcdate = date then begin
+		print (file("c:\TSM5\Reversal_Patterns.csv"),",Higher High,,Lower Low,,Total Cases ",currentbar:5:0);
+		print (file("c:\TSM5\Reversal_Patterns.csv"),"Pattern,Open,Close,Open,Close,Up,Down");
+		print (file("c:\TSM5\Reversal_Patterns.csv"),"Trend,", TUopen*100/nTU:4:0, ",", TUclose*100/nTU:4:0, ",",
+				TDopen*100/nTD:4:0, ",", TDclose*100/nTD:4:0, ",", nTU:4:0, ",", nTD:4:0);
+		print (file("c:\TSM5\Reversal_Patterns.csv"),"Reversal,", RUopen*100/nRU:4:0, ",", RUclose*100/nRU:4:0, ",", 
+				RDopen*100/nRD:4:0 ,",", RDclose*100/nRD:4:0, ",", nRU:4:0, ",", nRD:4:0);
+		print (file("c:\TSM5\Reversal_Patterns.csv"),"Extreme,", EUopen*100/nEU:4:0, ",", EUclose*100/nEU:4:0, ",", 
+				EDopen*100/nED:4:0, ",", EDclose*100/nED:4:0, ",", nEU:4:0, ",", nED:4:0);
+		end;

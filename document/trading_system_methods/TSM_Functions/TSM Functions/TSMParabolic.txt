@@ -1,0 +1,58 @@
+[LegacyColorValue = true]; 
+
+{ TSMParabolic : Parabolic Time/Price System
+  This version of the Parabolic system was written by
+  Sam Tennis, VISTA Research and Trading, Inc., 
+  8103 Camino Real, South Miami, FL 33143, Email: skt@vista.com
+  Modified by P.J.Kaufman.
+  Copyright 1997-1999, P.J.Kaufman. All rights reserved. }
+
+{ Input values were formerly AFmin = AFactor, AFinc = AFactor, and AFmax = ALimit
+  Function returns SAR (stop & reverse) price objective }
+
+	input:	AFmin(numericsimple), AFinc(numericsimple), AFmax(numericsimple);
+	vars:	Signal(1), AF(AFmin), SAR(low[0]), Hi(high[0]), Lo(Low[0]);
+
+	if currentbar <= 1 then Signal = 1;
+	if currentbar > 1 then begin
+		if High > Hi then Hi = High;
+		if Low < Lo then Lo = Low;
+
+		if Signal = 1 then begin
+			if Low <= SAR[1] then begin
+				Signal = -1;
+				SAR = Hi;
+				AF	= AFmin;
+				Lo = Low;
+				Hi = High;
+				end;  { Reverse Signal long to short }
+			end
+		else begin
+			if High >= SAR[1] then begin
+				Signal = 1;
+				SAR = Lo;
+				AF = AFmin;
+				Lo = Low;
+				Hi = High;
+				end;  { Reverse Signal short to long }
+			end;
+		end;
+
+	if Signal = 1 then begin
+		if Signal[1] = 1 then begin
+			SAR = SAR[1] + AF * (High[1] - SAR[1]);
+			if Hi > Hi[1] and AF < AFmax then AF = AF + AFinc;
+			end; { we have been "long" for at least one bar }
+		if SAR > Low then SAR = Low;
+		if SAR > Low[1] then SAR = Low[1];
+		end { long }
+		else begin
+			if Signal[1] = -1 then begin
+				SAR = SAR[1] + AF * (Low[1] - SAR[1]);
+				if Lo < Lo[1] and AF < AFmax then AF = AF + AFinc;
+				end; { we have been "short" for at least one bar }
+		if SAR < High then SAR = High;
+		if SAR < High[1] then SAR = High[1];
+		end; { short }
+
+	TSMParabolic = SAR;

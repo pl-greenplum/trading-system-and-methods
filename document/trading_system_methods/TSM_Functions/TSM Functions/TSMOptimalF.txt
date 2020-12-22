@@ -1,0 +1,20 @@
+[LegacyColorValue = true]; 
+
+{ TSMOptimalf : Optimal "f" 
+   Copyright 1999, P.J.Kaufman. All rights reserved.
+
+	Results are expressed as a fraction, representing the 
+	"ideal" portion of the total investment that should be
+	traded at any one time. }
+
+	vars: avgpl(0), probwin(0);
+	
+	avgpl = 0;
+	if numwintrades <> 0 and numlostrades <> 0 then
+		avgpl = (grossprofit / numwintrades) / (grossloss / numlostrades);
+	probwin = 0;
+	if totaltrades <> 0 then probwin = numwintrades / totaltrades;
+	if avgpl <> 0 then
+			TSMOptimalf = ( probwin * (avgpl - 1)) / avgpl
+		else
+			TSMOptimalf = 0;

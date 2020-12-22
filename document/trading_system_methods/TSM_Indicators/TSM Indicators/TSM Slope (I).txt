@@ -1,0 +1,9 @@
+{ TSM Slope
+	Copyright 2012, P.J.Kaufman. All rights reserved. }
+
+inputs:	period(20);
+vars:		slope(0);
+
+slope = LinearRegSlope(close,period);
+
+plot1(slope,"slope");

@@ -1,0 +1,51 @@
+[LegacyColorValue = true]; 
+
+{ TSM Moving Average Filtered : Moving average filtered system
+  Copyright 1994-1999,2011 P J Kaufman. All rights reserved. }
+
+{  period = length of calculaton
+	volperiod = length of volatility calculation
+   highvolfilter	 <> 0 then don't enter if volatiltiy > hvf*stdev of returns
+   lowvolfilter     <> 0 don't enter if volatility < lvf*stdev of returns
+}
+   input: period(40), volperiod(20), tradebelow(0), tradeabove(0);
+   vars:	signal(0), printPL(true), size(1), investment(25000), equity(0),
+  			allocation(0.05), returns(0), vol(0);
+  			
+  	If Currentbar = 1 then equity = investment;
+
+{	atrange = avgtruerange(ATRper);
+	if atrange = 0 then 
+			size = 1
+		else
+			size = equity*allocation/atrange; }
+	returns = close/close[1] - 1;
+	vol = stddev(returns,volperiod);
+  	signal = TSM_MAsignal(period,0);
+  	if signal > 0 and marketposition < 1 then begin
+  			if marketposition < 0 then buy this bar at close;
+  			if (tradebelow <> 0 and absvalue(returns) < tradebelow*vol[1]) or 
+  				(tradeabove <> 0 and absvalue(returns) > tradeabove*vol[1]) or
+  				(tradebelow = 0 and tradeabove = 0) then begin
+  				Buy size contracts This Bar at close;
+  				end;
+  			end
+  		else if signal < 0 and marketposition > -1 then begin
+  			if marketposition > 0 then sell this bar at close;
+  			if (tradebelow <> 0 and absvalue(returns) < tradebelow*vol[1]) or 
+  				(tradeabove <> 0 and absvalue(returns) > tradeabove*vol[1] )or
+  				(tradebelow = 0 and tradeabove = 0) then begin
+  				Sell short size contracts This Bar at close;
+  				end;
+  		end;
+  			
+  	equity = equity + marketposition*size[1]*(Close - close[1])*bigpointvalue;
+  	
+  	If printPL then begin
+  		If Currentbar = 1 then print(file("c:\TSM5\MA_filtered_PL.csv"),
+  				"Date,signal,position,size,netPL,Equity,returns,vlty");
+  		print(file("c:\TSM5\MA_filtered_PL.csv"),date:8:0, ",", signal:5:0, ",", 
+  						marketposition:5:0, ",", size:8:3, ",", 
+  						netprofit + openpositionprofit:5:5, ",", equity:8:4, ",", returns:4:4,
+  						",", vol:4:4);
+		end;

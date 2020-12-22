@@ -1,0 +1,57 @@
+[LegacyColorValue = true]; 
+
+{ TSM Raschke Opening Range Breakout
+  Copyright 2011, P.J.Kaufman. All rights reserved.  }
+  
+	vars:		topen(0), thigh(0), tlow(0), smallestrange(false), ndays(0), rhigh(0), rlow(0),
+				daycount(0), signal(0);
+	array:	trange[5000](0), dhigh[5000](0), dlow[5000](0);
+
+	signal = marketposition;
+	if signal <> 0 and signal[1] <> signal then daycount = 0;
+
+{ new day }
+	if date <> date[1] then begin
+		ndays = ndays + 1;
+		trange[ndays] = thigh - tlow;
+		dhigh[ndays] = thigh;
+		dlow[ndays] = tlow;
+		if ndays >= 4 then begin
+			smallestrange = false;
+			if trange[ndays] < trange[ndays-1] and trange[ndays] < trange[ndays-1] and 
+					trange[ndays] < trange[ndays-2] and trange[ndays] < trange[ndays-3] then begin
+				smallestrange = true;
+				rhigh = dhigh[ndays];
+				rlow = dlow[ndays];
+				end;
+			end;
+		topen = open;
+		thigh = high;
+		tlow = low;
+		daycount = daycount + 1;
+				
+{ if missed exiting at end of day }
+{		if marketposition > 0 then sell ("XLopen") all contracts this bar on close
+				else buy to cover ("XSopen") all contracts this bar on close;}
+		end;
+		
+{ save high and low for today }
+	thigh  = maxlist(thigh,high);
+	tlow = minlist(tlow,low);		
+
+{ if short or no position }
+	if smallestrange = true then begin		
+		if marketposition <= 0 then 
+				buy ("BOup") 1 contract next bar at rhigh + .0001 stop
+			else if marketposition >= 0 then 
+				sell short ("BOdown") 1 contract next bar at rlow - .0001 stop;
+		end;
+		
+	if marketposition > 0 then sell short ("BORevS") next bar at rlow - .0001 stop
+		else if marketposition < 0 then buy ("BORevL") next bar at rhigh + .0001 stop;
+		
+	if marketposition <> 0 and positionprofit < 0 and daycount >= 2 and time >= sess1endtime then begin
+			if marketposition > 0 then sell ("XLstop") all contracts this bar on close
+				else buy to cover ("XSstop") all contracts this bar on close;
+		end;
+	

@@ -1,0 +1,60 @@
+{ TSM Non-Random Trades
+	from Thomas Stridsman, "Grounding Randomness" (Futures, August 1999)
+	Adapted by P.J.Kaufman, copyright 2011. All rights reserved. }
+	
+	inputs:	PXpoint(open),PXstd(1);
+	vars:		sumpx(0), avgpx(0), diffpx(0), stdpx(0), setarr(0), sumarr(0), diffarr(0),
+				pxsell(0), pxmid(0), pxbuy(0), fname(" "), tradestring(" ");
+	arrays:	px[20](0);
+
+{ calculate open, high, low, close for 5 days }	
+	for setarr = 0 to 4 begin
+		px[setarr*4] = (open[setarr] - avgprice[setarr+1])/avgprice[setarr+1];
+		px[setarr*4 + 1] = (high[setarr] - avgprice[setarr+1])/avgprice[setarr+1];
+		px[setarr*4 + 2] = (low[setarr] - avgprice[setarr+1])/avgprice[setarr+1];
+		px[setarr*4 + 3] = (close[setarr] - avgprice[setarr+1])/avgprice[setarr+1];
+		end;
+
+{ calculate 20 days of data }		
+	for sumarr = 0 to 19 begin		
+		if sumarr = 0 then sumpx = 0;
+		sumpx = sumpx + px[sumarr];
+		if sumarr = 19 then avgpx = sumpx/20; {should be out of loop}
+		
+		for diffarr = 0 to 19 begin
+			if diffarr = 0 then diffpx = 0;
+			diffpx = diffpx + square(px[diffarr] - avgpx);
+			if diffarr = 19 then stdpx = squareroot(diffpx/20); {should be out of loop}
+			end;
+		end;
+		
+	if pxpoint = close then begin
+		pxsell = ((avgpx + stdpx)*pxstd + 1)*avgprice;
+		pxmid = (avgpx + 1)*avgprice;
+		pxbuy = ((avgpx - stdpx)*pxstd + 1)*avgprice;
+		end;
+		
+	if pxpoint <> close then begin
+		pxsell = ((avgpx[1] + stdpx[1])*pxstd + 1)*avgprice[1];
+		pxmid = (avgpx[1] + 1)*avgprice[1];
+		pxbuy = ((avgpx[1] - stdpx[1])*pxstd + 1)*avgprice[1];
+		end;
+		
+	plot1(pxsell,"PX Sell");
+	plot2(pxmid,"PX Mid");
+	plot3(pxbuy,"PX Buy");
+	
+	if currentbar = 1 then begin
+		fname = "c:\TSM5\Non-Random_trades.csv";
+		filedelete(fname);
+		tradestring = "Date,Open,High,Low,Close,PXsell,PXmid,PXbuy" + newline;
+		fileappend(fname,tradestring);
+		end;
+		
+	if currentbar > 5 then begin
+		tradestring = numtostr(date,0) + "," + numtostr(open,4) + "," + numtostr(high,4) + "," +
+							numtostr(low,4) + "," + numtostr(close,4) + "," + numtostr(pxsell,4) + "," +
+							numtostr(pxmid,4) + "," + numtostr(pxbuy,4) + newline;
+		fileappend(fname,tradestring);
+		end;
+		

@@ -1,0 +1,25 @@
+[LegacyColorValue = true]; 
+
+{ Ttest2v : Student T-test for 2 variables
+  Copyright 1998-1999, PJ Kaufman. All rights reserved }
+
+	inputs: price1(numericseries), length1(numericsimple),
+			price2(numericseries), length2(numericsimple);
+	vars:	n1(0), n2(0), var1(0), var2(0), avg1(0), avg2(0),
+			denom(0), pow1(0), pow2(0);
+
+	TSMTtest2v = 0;
+	n1 = length1;
+	if currentbar < length1 then n1 = currentbar;
+	n2 = length2;
+	if currentbar < length2 then n2 = currentbar;
+	if n1 > 0 and n2 > 0 then begin
+		avg1 = average(price1,n1);
+		var1 = summation(price1 - avg1,n1) / n1;
+		avg2 = average(price2,n2);
+		var2 = summation(price2 - avg2,n2) / n2;
+		pow1 = var1*var1;
+		pow2 = var2*var2;
+		denom = squareroot( (pow1/ n1) + (pow2 / n2));
+		if denom <> 0 then TSMTtest2v = (avg1 - avg2) / denom;
+		end;

@@ -1,0 +1,14 @@
+{ TSM Dynamic Momentum Indicator
+	from Tuschar Chande and Stanley Kroll, "The New Market Technician" (Wiley, 1994)
+	Copyright 2011, P.J.Kaufman. All rights reserved. }
+	
+	inputs:	period(14), fastvolperiod(5), slowvolperiod(10);
+	vars:		vol(0), avgvol(0), DynamicMomentum(0);
+
+	vol = stddev(close,fastvolperiod);
+	avgvol = vol/average(vol,slowvolperiod);
+	DynamicMomentum = intportion(period/avgvol);
+	
+	plot1(DynamicMomentum,"DMI");
+	
+	

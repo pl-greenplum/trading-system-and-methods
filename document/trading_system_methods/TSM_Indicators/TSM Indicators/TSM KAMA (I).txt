@@ -1,0 +1,12 @@
+[LegacyColorValue = true]; 
+
+   { TSM KAMA : Kaufman's Adaptive Moving Average
+     Copyright 1993,2011, P J Kaufman, All rights reserved. }
+
+   Inputs: 	period(8), fast(3), slow(30);
+   vars:    KAMA(0);
+
+   { ADAPTIVE MOVING AVERAGE }
+   KAMA = TSMKAMA(period,fast,slow);
+   Plot1(KAMA,"KAMA");
+   

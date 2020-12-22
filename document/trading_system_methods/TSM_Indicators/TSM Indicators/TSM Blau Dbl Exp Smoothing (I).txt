@@ -1,0 +1,12 @@
+{ TSM5 Blau's Double Exponential
+  Copyright 2011, P.J.Kaufman.  All rights reserved. }
+
+	inputs: 	diffper(1), period1(5), period2(40);
+	vars:		Exp(0), DblExp(0), diff(0);
+	
+	diff = Close - close[diffper];
+	Exp = SmoothedAverage(diff,period1);
+	DblExp = SmoothedAverage(Exp,period2);
+	
+
+	plot1(DblExp,"BlauDE");

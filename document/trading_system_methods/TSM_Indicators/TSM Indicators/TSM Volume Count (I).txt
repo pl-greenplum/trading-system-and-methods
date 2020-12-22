@@ -1,0 +1,6 @@
+[LegacyColorValue = true]; 
+
+{ TSM Volume Count : Volume Count Indicator
+  Copyright 1998-1999, PJ Kaufman. All rights reserved } 
+
+  plot1(TSMVolCountIndic, "TSMVCI");

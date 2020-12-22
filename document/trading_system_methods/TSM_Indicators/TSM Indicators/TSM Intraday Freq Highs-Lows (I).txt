@@ -1,0 +1,120 @@
+[LegacyColorValue = true]; 
+
+{ TSM Intraday Frequency of Highs and Lows
+   Copyright 2011 P.J. Kaufman.  All rights reserved.
+
+   Produce a histrogram of average moves by time
+   
+   returnoption = 0 for price difference
+   					1 for percentage 
+   mingap = minimum threshold, in % returns, to add a market
+	nbar = number of time bars in a day
+	ndays = number of days processed
+	todaybar = current bar today being processed   					
+}
+
+	inputs:	returnoption(0), mingap(0);
+   array:   timebar[200](0), freqhighup[200](0), freqlowup[200](0),
+   			freqhighdown[200](0), freqlowdown[200](0);
+   vars:    first(1), nbar(0),todaybar(0), thisbar(0), thigh(0), tlow(0),
+   			thighbar(0), tlowbar(0),
+   			firstdate(0), ix(0), openinggap(0);
+
+	If Currentbar = 1 then begin
+			print (file("c:\TSM5\Intraday freq highs-lows.csv"), 
+							"Time,FreqHighUp,FreqLowUP,FreqHighDN,FreqLowDN"); 
+			print (file("c:\TSM5\Intraday freq highs-lows debug.csv"), 
+					"nbar,timebar,high,low,thigh,tlow,thighbar,tlowbar");
+			end; 
+				
+{ Test for first day. Assign time bars }
+	If first <> 0 and nbar = 0 and date <> date[1] and date[1] <> 0 then begin
+			nbar = 1;
+			timebar[1] = time;
+			firstdate = date;
+			todaybar = 1;
+			thigh = high;
+			tlow = low;
+			thighbar = 1;
+			tlowbar = 1;
+			first = 0;
+			openinggap = (open - close[1])/close[1];
+			print (file("c:\TSM5\Intraday freq highs-lows debug.csv"), nbar:5:0, ",",
+					timebar[nbar]:5:0, ",", high:5:5, ",", low:5:5, ",", thigh:5:5, ",", 
+					tlow:5:5, ",", thighbar:5:0, ",", tlowbar:5:0);
+			End
+		Else if Date = firstdate then begin
+			nbar = nbar + 1;
+			timebar[nbar] = time;
+			todaybar = nbar;
+			if High > thigh then begin
+					thigh = high;
+					thighbar = todaybar;
+					end
+				else if Low < tlow then begin
+					tlow = low;
+					tlowbar = todaybar;
+				end;
+				
+			print (file("c:\TSM5\Intraday freq highs-lows debug.csv"), nbar:5:0, ",",
+					timebar[nbar]:5:0, ",", high:5:5, ",", low:5:5, ",", thigh:5:5, ",", 
+					tlow:5:5, ",", thighbar:5:0, ",", tlowbar:5:0);
+			End
+{ accumulate volume data in table in corresponding time slot }			
+		Else if date <> date[1] and first = 0 then begin
+{ process previous day's data }
+			If openinggap >= mingap then begin
+					freqhighup[thighbar] = freqhighup[thighbar] + 1;
+					freqlowup[tlowbar] = freqlowup[tlowbar] + 1;
+					end	
+				Else if openinggap <= -mingap then begin
+					freqhighdown[thighbar] = freqhighdown[thighbar] + 1;
+					freqlowdown[tlowbar] = freqlowdown[tlowbar] + 1;
+				end;
+			print (file("c:\TSM5\Intraday freq highs-lows debug.csv"), "Today entry,",
+					thighbar:5:0, ",", tlowbar:5:0, ",", freqhighup[thighbar]:5:0, ",", 
+					freqlowup[tlowbar]:5:0);
+			
+{ initialize today's data }		
+			todaybar = 1;
+			thigh = high;
+			tlow = low;
+			thighbar = 1;
+			tlowbar = 1;
+			openinggap = (open - close[1])/close[1];
+			if High > thigh then begin
+					thigh = high;
+					thighbar = todaybar;
+					end
+				else if Low < tlow then begin
+					tlow = low;
+					tlowbar = todaybar;
+				end;
+			print (file("c:\TSM5\Intraday freq highs-lows debug.csv"), nbar:5:0, ",",
+					timebar[todaybar]:5:0, ",", high:5:5, ",", low:5:5, ",", thigh:5:5, ",", 
+					tlow:5:5, ",", thighbar:5:0, ",", tlowbar:5:0);
+			end
+		Else if Date = date[1] and first <> 1 and date <> firstdate then begin
+			todaybar = todaybar + 1;
+			if high > thigh then begin
+					thigh = high;
+					thighbar = todaybar;
+					end
+				else if Low < tlow then begin
+					tlow = low;
+					tlowbar = todaybar;
+				end;
+			print (file("c:\TSM5\Intraday freq highs-lows debug.csv"), nbar:5:0, ",",
+					timebar[todaybar]:5:0, ",", high:5:5, ",", low:5:5, ",", thigh:5:5, ",", 
+					tlow:5:5, ",", thighbar:5:0, ",", tlowbar:5:0);
+		end;
+	
+				 					
+	If LastBarOnChart then begin
+		For ix = 1 to nbar begin
+			print (file("c:\TSM5\Intraday freq highs-lows.csv"),
+					timebar[ix]:5:0, ",", freqhighup[ix]:5:0, ",", freqlowup[ix]:5:0, ",",
+					freqhighdown[ix]:5:0, ",", freqlowdown[ix]:5:0); 
+			end;
+		end;
+	

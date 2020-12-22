@@ -1,0 +1,32 @@
+{ TSM Average Range and Gap
+	Copyright 2011, P.J.Kaufman. All rights reserved. }
+
+	vars:		sumgap(0), sumrange(0), sumprice(0), yr(0), ndays(0);
+
+	yr = year(date);
+	
+{ if new year then average and print }
+	if yr <> yr[1] then begin
+		if currentbar = 1 then
+				print (file("c:\TSM5\Avg_range_and_gap.csv"),"Year,AvgPrice,AvgRange,AvgGap")
+			else begin
+				print (file("c:\TSM5\Avg_range_and_gap.csv"),1900+yr[1]:4:0, ",",
+							sumprice/ndays:8:5, ",", bigpointvalue*sumrange/ndays:5:4, ",", 
+							bigpointvalue*sumgap/ndays:5:4);
+				sumprice = 0;
+				sumrange = 0;
+				sumgap = 0;
+				ndays = 0;
+			end;
+		end;
+
+	ndays = ndays + 1;
+	sumprice = sumprice + close;
+	sumrange = sumrange + absvalue(high - low);
+	sumgap = sumgap + absvalue(close[1] - open);
+	
+	if lastbaronchart then begin
+				print (file("c:\TSM5\Avg_range_and_gap.csv"),1900+yr[1]:4:0, ",",
+							sumprice/ndays:8:5, ",", bigpointvalue*sumrange/ndays:5:4, ",", 
+							bigpointvalue*sumgap/ndays:5:4);
+		end;

@@ -1,0 +1,23 @@
+{ TSM Bollinger Modified
+	from "Better Bollinger Bands" by Dennis McNicholl, "Futures," October 1998
+	Copyright 2011, P.J.Kaufman. All rights reserved. }
+	
+	inputs:	period(20), factor(2.0);
+	vars:		alpha(0), mt(0), ut(0), dt(0), mt2(0), ut2(0), dt2(0), but(0), blt(0);
+	
+{ smoothing constant }	
+	alpha = 2/(period + 1);
+
+	mt = alpha*close + (1 - alpha)*mt;
+	ut = alpha*mt + (1 - alpha)*ut;
+	dt = ((2 - alpha)*mt - ut)/(1 - alpha);
+	mt2 = alpha*absvalue(close - dt) + (1 - alpha)*mt2;
+	ut2 = alpha*mt2 + (1 - alpha)*ut2;
+	dt2 = ((2 - alpha)*mt2 - ut2)/(1 - alpha);
+	but = dt + factor*dt2;
+	blt = dt - factor*dt2;
+	
+	plot1(dt,"center");
+	plot2(but,"upper");
+	plot3(blt,"lower");
+	

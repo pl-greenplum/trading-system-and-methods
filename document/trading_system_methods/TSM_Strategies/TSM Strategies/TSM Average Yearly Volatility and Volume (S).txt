@@ -1,0 +1,34 @@
+{ TSM Average Yearly Volatility and Volume
+	Copyright 2011, P.J.Kaufman. All rights reserved. }
+
+	vars:		sumvlty(0), sumvol(0), sumprice(0), yr(0), ndays(0), sumopenclose(0);
+
+	yr = year(date);
+	
+{ if new year then average and print }
+	if yr <> yr[1] then begin
+		if currentbar = 1 then
+				print (file("c:\TSM5\Avg_volatility_and_volume.csv"),"Year,Dly$Vlty,%Vlty,$O-C,AvgVol")
+			else begin
+				print (file("c:\TSM5\Avg_volatility_and_volume.csv"),1900+yr[1]:4:0, ",",
+							bigpointvalue*sumvlty/ndays:8:2, ",", 100*sumvlty/sumprice:5:4, ",", 
+							bigpointvalue*sumopenclose/ndays:8:2, ",", sumvol/ndays:10:0);
+				sumvlty = 0;
+				sumvol = 0;
+				sumprice = 0;
+				sumopenclose = 0;
+				ndays = 0;
+			end;
+		end;
+
+	ndays = ndays + 1;
+	sumvlty = sumvlty + truerange;
+	sumvol = sumvol + volume;
+	sumprice = sumprice + close;
+	sumopenclose = sumopenclose + absvalue(open - close);
+	
+	if lastbaronchart then begin
+				print (file("c:\TSM5\Avg_volatility_and_volume.csv"),1900+yr[1]:4:0, ",",
+							bigpointvalue*sumvlty/ndays:8:2, ",", 100*sumvlty/sumprice:5:4, ",", 
+							bigpointvalue*sumopenclose/ndays:8:2, ",", sumvol/ndays:10:0);
+		end;

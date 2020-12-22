@@ -1,0 +1,10 @@
+[LegacyColorValue = true]; 
+
+{ TSM T-test2vDF : Student T-test degrees of freedom for 2 variables
+  Copyright 1998-1999, PJ Kaufman. All rights reserved }
+
+	inputs: 	length1(20), length2(40);
+	vars:		Tt2vDF(0);
+
+	Tt2vDF = TSMTtest2vDF(close,20,close,40);
+	plot1(Tt2vDF,"TSMTtest2vDF");

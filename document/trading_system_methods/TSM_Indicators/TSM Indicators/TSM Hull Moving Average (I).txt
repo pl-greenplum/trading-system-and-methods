@@ -1,0 +1,34 @@
+{ Hull Moving Average
+from "The Hull Moving Average" (The Technical Analyst, Jul-Sep 2010)
+Copyright 2011, P.J.Kaufman. All rights reserved. }
+
+{ Method is applied to weekly data }
+
+inputs:	period(16);
+vars:		SMA(0), dsSMA(0), halfperiod(0), recentavg(0), halfagain(0),
+			newperiod(0), avg1(0), avg2(0), avg2period(0), netavg(0),
+			HMAperiod(0), HMA(0), intnewperiod(0);
+
+SMA = average(close,period);
+dsSMA = average(SMA,period);
+
+halfperiod = period/2;
+recentavg = average(close,intportion(halfperiod));
+
+{halfagain = halfperiod/2;
+newperiod = halfagain + (halfperiod - halfagain);
+avg1 = waverage(close,intportion(newperiod));
+avg2period = 2*intportion(newperiod/2);
+avg2 = waverage(close,avg2period);
+netavg = avg2 - avg1;
+HMAperiod = intportion(squareroot(newperiod));
+HMA = HMAperiod*waverage(netavg,HMAperiod);}
+
+HMA = Waverage(2*Waverage(close, intportion(period/2)) - Waverage(close, period), intportion(squareroot(period)));
+
+
+plot1(HMA,"HMA");
+plot2(dsSMA,"dsSMA");
+
+{ original input statement }
+{Input: period (Default value 20) waverage (2*waverage (close,period/2)-waverage (close,period), SquareRoot (Period))}

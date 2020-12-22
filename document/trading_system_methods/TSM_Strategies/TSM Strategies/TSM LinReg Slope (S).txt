@@ -1,0 +1,16 @@
+[LegacyColorValue = true]; 
+
+{ TSM  LinReg Slope : Least squares method
+  Copyright 1994-1998, P J Kaufman.  All rights reserved. }
+
+{ period = length of exponential trend
+  filter	= whole percent trend change to give signal
+  lag	= enter after a lag of "lag"
+}
+	input:	period(20), filter(0), lag(0);
+	vars:	signal(0);
+
+{ Linear regression slope }
+	signal = TSMLRSsignal(period,filter,lag);
+	if signal = 1 then Buy This Bar  on close;
+	if signal = -1 then Sell Short This Bar  on close;

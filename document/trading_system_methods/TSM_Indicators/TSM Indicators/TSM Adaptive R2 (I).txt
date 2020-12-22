@@ -1,0 +1,8 @@
+[LegacyColorValue = true]; 
+
+{ TSM Adaptive R2 : Adaptive Correlation Coefficient
+  Plot smoothing function based correlation coefficient with integer series }
+
+	input:	period(9);
+
+	plot1(TSMAdaptiveR2(period),"TSMAR2");

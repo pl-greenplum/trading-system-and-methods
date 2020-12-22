@@ -1,0 +1,20 @@
+{ TSM Exponential Regularization
+	from Mark Mills in
+	Technical Analysis of Stocks & Commodities, July 2003
+	P.J.Kaufman 2011 }
+	
+	Inputs:	period(9), lambda(9);
+	vars:		alpha(0), EMA(0), RegEMA(0);
+	
+	if currentbar > 3 then begin
+			EMA = EMA + alpha*(close - EMA);
+			RegEMA = (RegEMA[1]*(1 + 2*lambda) + alpha*(close -  regEMA[1]) -  lambda*(regEMA[2]))/(1 + lambda);
+			end
+		else begin
+			alpha = 2/(period + 1);
+			EMA = close;
+			regEMA = close;
+		end;
+			
+	plot1(EMA,"EMA");
+	plot2(RegEMA,"RegEMA");

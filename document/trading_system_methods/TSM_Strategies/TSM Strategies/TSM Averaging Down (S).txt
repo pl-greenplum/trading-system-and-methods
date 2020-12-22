@@ -1,0 +1,57 @@
+[LegacyColorValue = true]; 
+
+{ TSM Averaging down using a moving average strategy
+  Copyright 2011 P J Kaufman. All rights reserved. }
+
+{ period = length of calculaton
+  maxposition = maximum shares or contracts
+}
+  input: period(80), unit(1), maxadds(5), daysbetween(1);
+  vars:	signal(0), trend(0), newtrend(0), equity(0), excess(0), size(0), 
+  			maximumloss(0), nadds(0),lastadd(0);
+  			
+  	If Currentbar = 1 then equity = 0;
+
+	trend = average(close,period);
+	if trend > trend[1] then signal = 1
+		else if trend < trend[1] then signal = -1;
+		
+	if signal <> signal[1] then begin
+			newtrend = signal;
+			if newtrend > 0 then begin
+				if marketposition < 0 then buy to cover all shares this bar on close;
+				buy ("new_long") unit shares this bar on close;
+				maximumloss = 0;
+				nadds = 1;
+				lastadd = currentbar;
+				end
+			else if newtrend < 0 then begin
+				if marketposition > 0 then sell all shares this bar on close;
+				sell short ("new_short") unit shares this bar on close;
+				maximumloss = 0;
+				nadds = 1;
+				lastadd = currentbar;
+			end;
+			end
+		else newtrend = 0;
+	
+	if marketposition <> 0 then begin
+		maximumloss = minlist(maximumloss,openpositionprofit);
+		if newtrend = 0 and nadds < maxadds and openpositionprofit < maximumloss[1] and
+				currentbar - lastadd >= daysbetween then begin
+			if signal > 0 then begin
+					buy ("next_long") unit shares this bar on close;
+					lastadd = currentbar;
+					end
+				else if signal < 0 then begin
+					sell short ("next_short") unit shares this bar on close;
+					lastadd = currentbar;
+				end;
+			end;
+		end;
+ 	
+  	If Currentbar = 1 then print(file("c:\TSM5\Averaging_down.csv"), 
+  					"Date,close,trend,new,pos,curpos,nadds,lastadd,netPL,TradePL,maxloss");
+  	print(file("c:\TSM5\Averaging_down.csv"),date:8:0, ",", close:6:4, ",", trend:6:4, ",", newtrend:3:0, ",", 
+  					marketposition:3:0, ",", currentshares:8:3, ",", nadds:5:0, ",", lastadd:5:0, ",", 
+  					netprofit + openpositionprofit:5:5, ",", openpositionprofit:6:2, ",", maximumloss:8:2);

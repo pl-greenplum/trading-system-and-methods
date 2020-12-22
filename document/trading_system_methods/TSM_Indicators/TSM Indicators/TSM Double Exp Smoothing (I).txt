@@ -1,0 +1,11 @@
+{ TSM5 Double Exp Smoothing
+  Copyright 2011, P.J.Kaufman.  All rights reserved. }
+
+	inputs: 	period(20);
+	vars:		Exp(0), DblExp(0);
+	
+	Exp = SmoothedAverage(close,period);
+	DblExp = SmoothedAverage(exp,period);
+	
+
+	plot1(DblExp,"DblExp");

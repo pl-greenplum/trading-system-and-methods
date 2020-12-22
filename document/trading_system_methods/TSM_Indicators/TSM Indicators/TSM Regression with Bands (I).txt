@@ -1,0 +1,30 @@
+{ TSM5 Regression with bands
+	Copyright 2011, P.J.Kaufman. All rights reserved. }
+	
+	inputs: 	period(20), bandwidth(2.0);
+	vars:		slope(0), lrvalue(0), resid(0), sdresid(0), angle(0),
+				intercept(0), upperband(0), lowerband(0), size(0), investment(25000);
+	
+	Value1 = LinearReg( close, period, currentbar, slope, angle, intercept, 
+ 				lrvalue ) ;
+{	slope = LinearRegSlope(close,period);
+	lrvalue = linearRegValue(close,period,currentbar);}
+	resid = Close - lrvalue;
+	
+	If Currentbar > period then begin
+{ position size }
+		size = investment / (avgtruerange(30)*bigpointvalue);
+		size = maxlist(size,1);
+		sdresid = stddev(close,period);
+		Upperband = lrvalue + slope + bandwidth*sdresid;
+		Lowerband = lrvalue + slope - bandwidth*sdresid;
+{		plot1(upperband,"UB");
+		Plot2(lowerband,"LB");
+}		plot3(lrvalue,"LR");
+		
+{		If Close > upperband[1] then buy size contracts this bar on close
+			Else if Close < lowerband[1] then sell short size contracts this bar on close; }
+		end;
+	
+	
+		

@@ -1,0 +1,30 @@
+[LegacyColorValue = true]; 
+
+{ TSM Stress
+  Copyright 2011, P.J.Kaufman. All rights reserved.
+ }
+  inputs: 	period(10);
+  vars: 		stoch1(0), stoch2(0), diff(0), range1(0), range2(0), stressvalue(0);
+  
+  stressvalue = 50;
+  stoch1 = 50;
+  stoch2 = 50;
+{ raw stochastics for price1 and price2 }
+	range1 = highest(high,period) - lowest(low,period);
+	range2 = highest(high of data2,period) - lowest(low of data2,period);
+	
+	If range1 <> 0 and range2 <> 0 then begin
+		stoch1 = (close - lowest(low,period))/range1;
+		stoch2 = (close of data2 - lowest(low of data2,period))/range2;
+	
+{ difference in stochastics }
+		diff = stoch1 - stoch2;
+	
+{ stress indicator }
+		range1 = highest(diff,period) - lowest(diff,period);
+		If range1 <> 0 then stressvalue = 100*(diff - lowest(diff, period))/range1;
+	end;
+	
+	Plot1(stressvalue,"stress");
+	Plot2(100*stoch1,"stoch1");
+	plot3(100*stoch2,"stoch2");

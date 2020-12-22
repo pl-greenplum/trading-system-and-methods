@@ -1,0 +1,12 @@
+{ TSM Force Index
+	From Alex Elder, Trading for a Living (Wiley 1993)
+	Copyright 2011, P.J.Kaufman. All rights reserved. }
+	
+	inputs:	smoothing(.333);
+	vars:		voladj(0), FI(0);
+	
+	voladj = volume*(close - close[1]);
+	FI = FI[1] + smoothing*(voladj - FI[1]);
+	
+	plot1(FI,"ForceIndex");
+	

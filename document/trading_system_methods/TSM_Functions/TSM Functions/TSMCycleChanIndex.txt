@@ -1,0 +1,19 @@
+[LegacyColorValue = true]; 
+
+{ TSMCycleChanIndex: Cycle Channel Index
+  Copyright 1999, P.J.Kaufman. All rights reserved. }
+
+	inputs: phigh(numericseries), plow(numericseries), pclose(numericseries),
+		length(numericsimple);
+	vars:	n(0), dev(0), md(0), hlc(0), avg(0);
+
+	n = length;
+	if currentbar < length then n = currentbar;
+	hlc = (phigh + plow + pclose) / 3;
+	avg = average(hlc,n);
+	dev = absvalue(hlc - avg);
+	md = average(dev,n);
+	if md <> 0 then
+		TSMCycleChanIndex = (hlc - avg) / (.015 * md)
+	   else
+		TSMCycleChanIndex = 0;

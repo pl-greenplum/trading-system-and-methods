@@ -1,0 +1,61 @@
+[LegacyColorValue = true]; 
+
+{ TSM Low Volume
+   Filter entries and/or exits based on low volume
+   Copyright 1994-1999, P. J. Kaufman.  All rights reserved. }
+
+{ options = 1, no not enter on low volume
+  options = 2, exit on low volume
+  options = 3, both 1 and 2
+}
+
+  input:  options(1), length(70), nlow(5), factor(1.0);
+  vars:   vavg(0), vavgn(0), vsd(0), lowlimit(0), uplimit(0), mavg(0),aror(0),
+           deltapl(0), totalpl(0), risk(0), ratio(0), adjvol(0), variance(0), savevol(0);
+
+{ Find average volume, replacing bad values }
+  adjvol = volume;
+  if volume<>0 then savevol = volume;
+  if volume=0 then adjvol = savevol;
+{ Replace high volume days because they distort standard deviation }
+  if adjvol>2*factor*vsd then adjvol = savevol;
+  vavg = average(adjvol,length);
+  vsd = stddev(adjvol,length);
+  vavgn = average(adjvol,nlow);
+
+{ Extreme volume limits }
+   lowlimit = vavg - factor*vsd;
+   uplimit = vavg + 2*factor*vsd;
+
+{ System rules based on moving average trend }
+   mavg = average(close,length/2);
+{ Only enter on new trend signals }
+   if options=2 then begin
+      if mavg>mavg[1] and mavg[1]<=mavg[2]  then Buy This Bar  on close;
+      if mavg<mavg[1] and mavg[1]>=mavg[2]  then Sell Short This Bar  on close;
+      end;
+   if options<>2 then begin
+      if mavg>mavg[1] and vavgn>lowlimit  then Buy This Bar  on close;
+      if mavg<mavg[1] and vavgn>lowlimit  then Sell Short This Bar  on close;
+      end;
+
+{ Exit on low volume }
+   if options<>1 then begin
+      if mavg<mavg[1] or (PositionProfit>0 and vavgn<= lowlimit)  then Sell This Bar  on close;
+      if mavg>mavg[1] or (PositionProfit>0 and vavgn<= lowlimit)  then Buy to Cover This Bar  on close;
+      end;
+   if(options=1)then begin
+      if mavg<mavg[1]  then Sell This Bar  on close;
+      if mavg>mavg[1]  then Buy to Cover This Bar  on close;
+      end;
+
+{ Calculate return/risk ratio }
+   totalpl = (NetProfit + PositionProfit)/10000.;
+   deltapl = totalpl - totalpl[1];
+   variance = variance[1] + deltapl*deltapl;
+   risk = SquareRoot(variance)/currentbar;
+   aror = totalpl*250./currentbar;
+   ratio = ratio[1];
+   if risk<>0 then ratio = aror/risk;
+   if lastbaronchart then print("Date=",date:6:0, "  TPL=",totalpl:8:0, "  n=", currentbar:5:0,
+              "  AROR=", aror:6:2, "  Risk=", risk:8:2, "  RR=",ratio:6:3);

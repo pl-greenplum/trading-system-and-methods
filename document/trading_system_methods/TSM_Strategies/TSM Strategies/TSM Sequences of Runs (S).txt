@@ -1,0 +1,51 @@
+[LegacyColorValue = true]; 
+
+{ TSM Sequences of Runs
+  Copyright 2011 P J Kaufman. All rights reserved. }
+
+   vars:	sumup(0), sumdown(0), countup(0), countdown(0), currentrun(0), 
+   		length(0), ix(0);
+  	array: runs[20](0);
+  			
+  	if close > close[1] and currentrun <= 0 then begin
+ 			if length <> 0 then runs[length] = runs[length] + 1;
+ 			length = 1;
+ 			sumup = sumup + close - close[1];
+ 			countup = countup + 1;
+ 			currentrun = 1;
+ 			end
+ 		else if close < close[1] and currentrun >= 0 then begin
+ 			if length <> 0 then runs[length] = runs[length] + 1;
+ 			length = 1;
+ 			sumdown = sumdown + close - close[1];
+ 			countdown = countdown + 1;
+ 			currentrun = -1;
+ 			end
+ 		else if close > close[1] then begin
+ 			length = length + 1;
+ 			sumup = sumup + close - close[1];
+ 			countup = countup + 1;
+ 			end
+ 		else if close < close[1] then begin
+ 			length = length + 1;
+ 			sumdown = sumdown + close - close[1];
+ 			countdown = countdown + 1;
+ 		end;
+ 		
+{	print(file("c:\TSM5\Sequences_of_runs.csv"),currentbar:5:0, ",", close - close[1]:5:5, ",",
+  				currentrun:3:0, ",", length:5:0, ",", countup:5:0, ",", countdown:5:0);  }
+ 		
+ 			
+  	If lastbaronchart then begin
+  		sumup = sumup/countup;
+  		sumdown = sumdown/countdown;
+  		print(file("c:\TSM5\Sequences_of_runs.csv"),"Total days,", countup+countdown:5:0);
+  		print(file("c:\TSM5\Sequences_of_runs.csv"),"Days up,", countup:5:0);
+  		print(file("c:\TSM5\Sequences_of_runs.csv"),"Days down,", countdown:5:0);
+  		print(file("c:\TSM5\Sequences_of_runs.csv"),"Avg up,", sumup:5:4);
+  		print(file("c:\TSM5\Sequences_of_runs.csv"),"Avg down,", sumdown:5:4);
+  		print(file("c:\TSM5\Sequences_of_runs.csv"),"Run,Occurences");
+  		for ix = 1 to 15 begin
+  			print(file("c:\TSM5\Sequences_of_runs.csv"),ix:5:0,",",runs[ix]:5:0);
+  			end;
+  		end;

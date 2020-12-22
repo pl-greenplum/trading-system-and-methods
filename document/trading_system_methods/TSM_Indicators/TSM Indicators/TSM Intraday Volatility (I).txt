@@ -1,0 +1,69 @@
+[LegacyColorValue = true]; 
+
+{ TSM Intraday Volatility
+   Copyright 1995-1999, 2011 P.J. Kaufman.  All rights reserved.
+
+   Produce a histrogram of frequency of average vlty by time
+   Overlay with line chart of current vlty  }
+
+   inputs:  period(10);
+   array:   timebar[200](0), vltybar[2500](0);
+   vars:    first(true), nbar(0), ndays(0), divisor(0), todaybar(0),
+   			thisbar(0), avgvlty(0), firstdate(0), vlty(0), pvolbar(0);
+
+{	If Currentbar = 1 then 
+			print (file("c:\TSM5\Intraday vlty.csv"), 
+				"Date,days,bar,time,pvlty,divisor,vlty,newavg");}
+				
+{ Test for first day, set up array }
+	If first and nbar = 0 then begin
+			nbar = 1;
+			ndays = 1;
+			timebar[1] = time;
+			vlty = truerange;
+			vltybar[1] = truerange;
+			firstdate = date;
+			todaybar = 1;
+			first = false;
+{			print (file("c:\TSM5\Intraday vlty.csv"), date:8:0, ",1,", todaybar:5:0, ",", 
+					timebar[todaybar]:5:0, ",0,1,", vlty:5:4, ",", vltybar[todaybar]:5:4);}
+			End
+		Else if Date = firstdate then begin
+			nbar = nbar + 1;
+			timebar[nbar] = time;
+			vlty = truerange;
+			vltybar[nbar] = vlty;
+			todaybar = nbar;
+{			print (file("c:\TSM5\Intraday vlty.csv"), date:8:0, ",1,", todaybar:5:0, ",", 
+					timebar[todaybar]:5:0, ",0,1,", vlty:5:4, ",", vltybar[todaybar]:5:4);}
+			End
+			
+{ accumulate vlty data in table in corresponding time slot }			
+	 	Else if date <> date[1] and date <> firstdate then begin
+			ndays = ndays + 1;
+			todaybar = 1;
+			divisor = minlist(ndays,period);
+			vlty = truerange;
+			pvolbar = vltybar[todaybar];
+			if divisor <> 0 then vltybar[todaybar] = vltybar[todaybar] + vlty/divisor - vltybar[todaybar]/divisor;
+{			print (file("c:\TSM5\Intraday vlty.csv"), date:8:0, ",", ndays:5:0, ",", todaybar:5:0, ",", 
+				timebar[todaybar]:5:0, ",", pvolbar:5:4, ",", divisor:5:0, ",", vlty:5:4, ",", vltybar[todaybar]:5:4);}
+			end
+		Else if Date = date[1] and date <> firstdate then begin
+			todaybar = todaybar + 1;
+			divisor = minlist(ndays,period);
+			vlty = truerange;
+			pvolbar = vltybar[todaybar];
+{ histogram in n-day average of this bar }			
+			if divisor <> 0 then vltybar[todaybar] = vltybar[todaybar] + vlty/divisor - vltybar[todaybar]/divisor;
+{			print (file("c:\TSM5\Intraday vlty.csv"), date:8:0, ",", ndays:5:0, ",", todaybar:5:0, ",", 
+				timebar[todaybar]:5:0, ",", pvolbar:5:4, ",", divisor:5:0, ",", vlty:5:4, ",", vltybar[todaybar]:5:4);}
+		end;
+
+{ average vlty for this bar }
+	if ndays > period then begin
+		plot1(vlty,"vlty");
+		plot2(vltybar[todaybar],"avgvlty");
+		end;
+	
+	

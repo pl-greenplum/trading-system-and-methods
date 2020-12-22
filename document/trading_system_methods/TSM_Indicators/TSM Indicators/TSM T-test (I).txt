@@ -1,0 +1,10 @@
+[LegacyColorValue = true]; 
+
+{ TSM T-test : Student T-test
+  Copyright 1998-1999, PJ Kaufman. All rights reserved }
+
+	inputs: length(20);
+	vars:	Ttest(0);
+
+	Ttest = TSMTtest(close,length);
+	plot1(Ttest,"TSMTtest");

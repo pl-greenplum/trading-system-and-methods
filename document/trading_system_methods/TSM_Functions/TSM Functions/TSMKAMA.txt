@@ -1,0 +1,25 @@
+[LegacyColorValue = true]; 
+
+{ TSMKAMA : Kaufman's Adaptive Moving Average
+  Copyright 1990-1998,2011, PJ Kaufman. All rights reserved }
+
+	inputs:	period(numericsimple), fast(numericsimple), slow(numericsimple);
+	vars:	efratio(0), smooth(1), fastend(.666), slowend(.0645), AMA(0), diff(0),
+			signal(0), noise(0);
+
+{ calculate efficiency ratio }
+	if currentbar = 1 then begin
+			AMA = close;
+			fastend = 2/(fast + 1);
+			slowend = 2/(slow + 1);
+			end
+		else begin
+			efratio = 1;
+			diff = absvalue(close - close[1]);
+			signal = absvalue(close - close[period]);
+			noise = summation(diff,period);
+			if noise <> 0 then efratio = signal / noise;
+			smooth = power(efratio*(fastend - slowend) + slowend,2);
+			AMA = AMA[1] + smooth*(close - AMA[1]);
+		end;
+	TSMKAMA = AMA;

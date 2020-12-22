@@ -1,0 +1,17 @@
+[LegacyColorValue = true]; 
+
+{ TSMAdaptiveR2 : Correlation coefficient as smoothing constant
+  Return: AR2
+  Copyright 1998-1999, PJ Kaufman. All rights reserved }
+
+	inputs:	period(numericsimple);
+	vars:	smooth(1), AR2(0), R2(0), diff(0);
+
+	if currentbar > 1 then begin
+{	if currentbar >= period then begin }
+		R2 = power(correlation(currentbar,close, period),2);
+		AR2 = AR2[1] + R2*(close - AR2[1]);
+		end
+	else
+		AR2 = close;
+	TSMAdaptiveR2 = AR2;

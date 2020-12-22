@@ -1,0 +1,56 @@
+[LegacyColorValue = true]; 
+
+{Overnight Gap as percentage of price
+ Copyright 1993-1999, 2012, P J Kaufman. All rights reserved}
+
+{	program prints average % overnight (opening) gap in PrintLog to provide 
+	market comparisons.
+
+	input description:
+	type = convert interest rates to approx yield to apply percentage }
+
+	inputs: type(0);
+	vars:	pcgap(0), thigh(0), tlow(0), gap(0), n(0), count(0),
+			xopen(0), xhigh(0), xlow(0), xclose(0), par(800);
+
+{  3-month rates }
+   if type = 1 then begin
+         xopen = 100 - open;
+         xhigh = 100 - high;
+         xlow = 100 - low;
+         xclose = 100 - close;
+         end
+{ long-term rates }
+      else if type = 2 then begin
+         xopen =  par / open;
+         xhigh =  par / high;
+         xlow = par / low;
+         xclose = par / close;
+         end
+{ long-term rates, European quotes }
+      else if type = 3 then begin
+         xopen = par*100 / open;
+         xhigh = par*100 / high;
+         xlow = par*100 / low;
+         xclose = par*100 / close;
+         end
+{ regular prices }
+      else begin
+         xopen = open;
+         xhigh = high;
+         xlow = low;
+         xclose = close;
+         end;
+
+	thigh = xhigh;
+	tlow = xlow;
+	if xclose[1] < tlow then tlow = xclose[1];
+	if xclose[1] > thigh then thigh = xclose[1];
+	gap = 0;
+	if thigh - tlow <> 0 then gap = (absvalue(xopen - xclose[1]))*100 / (thigh - tlow);
+	if gap <= 100 then begin
+		pcgap = pcgap + gap;
+		count = count + 1;
+		end;
+	if lastcalcdate = date then print("Overnight gap: count=",count:5:0,
+		 " Avg gap=",pcgap/count:5:1);

@@ -1,0 +1,16 @@
+[LegacyColorValue = true]; 
+
+{ TSM Projected Ranges, p. 383
+  Copyright 1998-1999, PJ Kaufman. All rights reserved }
+
+	vars:	pivot(0), R1(0), R2(0), S1(0), S2(0);
+
+	pivot = (high + low + close) / 2;
+	R1 = 2 * pivot - low;
+	S1 = 2 * pivot - high;
+	R2 = (pivot - S1) + R1;
+	S2 = pivot - (R1 - S1);
+	plot1(R2,"TSMr2");
+	plot2(R1,"TSMr1");
+	plot3(S1,"TSMs1");
+	plot4(S2,"TSMs2");

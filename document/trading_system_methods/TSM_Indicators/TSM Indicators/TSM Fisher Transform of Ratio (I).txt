@@ -1,0 +1,21 @@
+{ TSM Fisher Transform of Ratio 
+  Copyright 2011, P.J.Kaufman. All rights reserved.
+  Plots the volatility of a spread ratio }
+  
+  	inputs: period(10);
+  	vars:	 ratio(0), AVol(0), maxH(0) ,minL(0), Fish(0), x(0);
+  
+  	ratio = close/Close of data2;
+   
+	maxH = highest(ratio,period);
+	minL = lowest(ratio,period);
+
+	x = .5*2*((ratio - minL)/(maxH - minL) - .5) + .5*value1[1];
+	if x > .999 then x = .999;
+	if x < -.999 then x = -.999;
+
+	Fish = .5*log((1 + x)/(1 - x)) + .5*Fish[1];
+
+	plot1(Fish,"Fisher");
+	plot2(Fish[1],"Trigger");
+

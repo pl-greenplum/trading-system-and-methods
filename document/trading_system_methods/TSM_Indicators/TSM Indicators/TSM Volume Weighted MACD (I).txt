@@ -1,0 +1,15 @@
+{ Volume Weighted MACD
+  Copyright 2011, P.J.Kaufman. All rights reserved. }
+  
+  inputs: period1(12), period2(26), signalper(9);
+  vars:	 avg1(0), avg2(0), signal(0), vwmacd(0), closevol(0);
+  
+  closevol = close*Volume;
+  avg1 = summation(closevol,period1)/summation(volume,period1);
+  avg2 = Summation(closevol,period2)/summation(volume,period2);
+  vwmacd = avg1 - avg2;
+  signal = average(vwmacd,signalper);
+  
+  plot1(vwmacd,"VWMACD");
+  plot2(signal,"Signal");
+  

@@ -1,0 +1,60 @@
+[LegacyColorValue = true]; 
+
+{ TSM Moving Average : Moving average system
+  Copyright 1994-1999,2011 P J Kaufman. All rights reserved. }
+
+{ period = length of calculaton
+  crossoption =0 using trendline, =1 use price crossing trendline
+  entrypriceoption = 0 buy/sell on current close
+  						 = 1 buy/sell on next open
+  						 = 2 buy/sell next close 
+  longonly			 true then only long positions
+}
+  input: period(40), entrypriceoption(0), longonly(false);
+  vars:	signal(0), price(0), printPL(true), size(1), investment(25000), 
+  			allocation(0.05), ATRper(20), equity(0), atrange(0), sumweights(0),
+  			LWA(0), ix(0), jx(0);
+  			
+  	If Currentbar = 1 then begin
+  		equity = investment;
+  		sumweights = (period*period + period)/2;
+		end;
+		
+	LWA = 0;
+	for ix = period downto 1 begin
+		jx = period - ix;
+		LWA = LWA + (ix)*close[ix];
+		end;
+	LWA = LWA/sumweights;
+	if LWA > LWA[1] then signal = 1
+		else if LWA < LWA[1] then signal = -1;
+	
+  	If entrypriceoption = 0 then begin
+  			if signal = 1 and marketposition <> 1 then Buy size contracts This Bar at close
+  			else if signal = -1 and marketposition <> -1 then begin
+  				If longonly then sell all contracts this bar on close
+  					else Sell Short size contracts This Bar at close;
+  				end;
+  			end
+  		Else if Entrypriceoption = 1 then begin
+  			If signal = 1 and marketposition <> 1 then buy size contracts next bar on open
+  			Else if signal = -1 and marketposition <> -1 then begin
+  				if longonly then sell all contracts this bar on close
+  					else sell short size contracts next bar on open;
+  				end;
+  			end
+  		Else if Entrypriceoption = 2 then begin
+  			If signal[1] = 1 and marketposition <> 1 then buy size contracts this bar at close
+  				Else if signal[1] = -1 and marketposition <> -1 then begin
+  					if longonly then sell all contracts this bar on close
+  						else sell short size contracts this bar at close;
+  				end;
+  		end;
+  	
+  	equity = equity + marketposition*size[1]*(Close - close[1])*bigpointvalue;
+  	
+  	If printPL then begin
+  		If Currentbar = 1 then print(file("c:\TSM5\LWA_PL.csv"), "Date,size,netPL,Equity");
+  		print(file("c:\TSM5\MA PL.csv"),date:8:0, ",", size:8:3, ",", 
+  						netprofit + openpositionprofit:5:5, ",", equity:8:4);
+		end;

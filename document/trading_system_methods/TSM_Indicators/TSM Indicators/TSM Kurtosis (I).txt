@@ -1,0 +1,16 @@
+{ TSM Kurtosis
+	Copyright 2011, P.J.Kaufman. All rights reserved. }
+	
+	inputs:	period(20);
+	vars:		ix(0), K(0), sum(0), avg(0);
+	
+	avg = average(close,period);
+	sum = 0;
+	for ix = 0 to period-1 begin
+		sum = sum + power(close[ix] - avg,4);
+		end;
+	
+	K = sum/((period - 1)*power(stddev(close,period),4));
+	
+	plot1(K,"Kurtosis");
+	

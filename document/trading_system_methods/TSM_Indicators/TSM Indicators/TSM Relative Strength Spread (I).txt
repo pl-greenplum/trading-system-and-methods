@@ -1,0 +1,16 @@
+{ TSM Relative Strength Spread
+	from Ian Copsey, "Relative Spread Strength as a Long-Term Cycle Tool"
+	Technical Analysis of Stocks & Commodities, October 2006
+	P.J.Kaufman }
+	
+	Inputs:	RSIper(14), MAper1(10), MAper2(60), overbought(70), oversold(30);
+	vars:		MA1(0), MA2(0), spread(0), osc(0);
+	
+	MA1 = average(close,MAper1);
+	MA2 = average(close,MAper2);
+	spread = MA2 - MA1;
+	osc = rsi_nday(spread,rsiper,1);
+			
+	plot1(osc,"RSI");
+	plot2(Overbought,"Overbought");
+	plot3(Oversold,"Oversold");		

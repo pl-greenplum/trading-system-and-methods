@@ -1,0 +1,17 @@
+{ FuzzyDarkCloud function
+    From Murray A. Ruggiero, Jr., "Cybernetic Trading Systems" (Wiley, 1997) 
+    Returns O if not a dark cloud, and size if it is a dark cloud }
+    
+    inputs:   lookback(numeric), onecof(numeric), zerocof(numeric); 
+    vars:     color(0), sbody(0);
+    
+color = candlecolor(open,close); { determines the candlestick color }
+ 
+{ fuzzysmall has the arguments: lookback, onecof, zerocof
+  but we reverse oneconf and zerocof to test for "not small" }   
+sbody = fuzzysmall(open,close,lookback,zerocof*.3,onecof*1.0);
+return = O;
+fuzzyrange = close - (open[1] + close[1])/2;
+if color = -1 and color[1] = 1 and open > high[1] and fuzzyrange < O then
+    return = 1 - sbody[1];
+TSM_fuzzydarkcloud = return;

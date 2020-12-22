@@ -1,0 +1,14 @@
+[LegacyColorValue = true]; 
+
+{ TSMDeMarkrangelow : DeMark's Projected Range, High
+  Copyright 1998-1999, PJ Kaufman. All rights reserved }
+
+	inputs: popen(numeric), phigh(numeric),  plow(numeric),  pclose(numeric);
+	vars:	avg(0);
+
+	if pclose < popen then
+			TSMDeMarkrangelow = (phigh + pclose + 2 * plow) / 2 - phigh
+		else if pclose > popen then
+			TSMDeMarkrangelow = (2 * phigh + plow + pclose) / 2 - phigh
+		else
+			TSMDeMarkrangelow = (phigh + plow + 2 * pclose) / 2 - phigh;

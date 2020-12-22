@@ -1,0 +1,19 @@
+{ TSM RSI Countertrend
+	Copyright 2012, P.J.Kaufman. All rights reserved.
+	Buy when the RSI momentum is oversold; Sell when overbought; exit after n days or at zero RSI }
+	
+	inputs:	period(9), momperiod(5), exitdays(3), buylevel(-15), selllevel(15);
+	vars:		mom(0);
+	
+	mom = RSI(close,period);
+	
+	if marketposition <> 1 and mom - mom[momperiod] < buylevel then buy 1 contract next bar on open
+		else if marketposition <> -1 and mom - mom[momperiod] > selllevel then sell 1 contract next bar on open;
+	
+	if barssinceentry >= 3 then begin
+		if marketposition = 1 then sell all contracts next bar on open
+			else if marketposition = -1 then buy to cover all contracts next bar on open;
+		end;
+		
+	if marketposition = 1 and mom > 50 then sell all contracts next bar on open
+			else if marketposition = -1 and mom < 50 then buy to cover all contracts next bar on open; 

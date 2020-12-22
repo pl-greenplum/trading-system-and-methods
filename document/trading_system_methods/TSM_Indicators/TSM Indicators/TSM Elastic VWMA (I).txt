@@ -1,0 +1,13 @@
+{ Elastic Volume-Weighted Moving Average
+  Copyright 2011, P.J.Kaufman. All rights reserved. }
+  
+  inputs: outstandingshares(200000000);
+  vars:	 eVWMA(0);
+  
+   if Currentbar = 1 then 
+  		eVWMA = ((outstandingshares - volume) + volume*close)/outstandingshares
+  	else	
+ 	 eVWMA = ((outstandingshares - volume)*eVWMA[1] + volume*close)/outstandingshares;
+  
+  plot1(eVWMA,"eVWMA");
+   

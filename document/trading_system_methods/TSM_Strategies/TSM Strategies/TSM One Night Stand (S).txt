@@ -1,0 +1,24 @@
+{ TSM5 One Night Stand
+	From Joe Krutzinger, The Trading Systems Toolkit 
+	Buying on a Thurday breakout in the trend direction with momentum }
+	
+	{ inputs: period1(5), period2(20), tradingday(4), longper(4), shortper(4);}
+	inputs: 	period1(10), period2(40), tradingday(4), longper(4), shortper(8);
+	vars:		size(0), investment(25000), aboveMA(true);
+	
+{ position size }
+	size = investment / (avgtruerange(30)*bigpointvalue);
+	size = maxlist(size,1);
+	
+	aboveMA = average(close,period1) > average(close,period2);
+	
+	If dayofweek(date) = tradingday then begin
+		if aboveMA then
+			Buy size contracts next bar at highest(high,longper) stop
+		else
+			Sell short size contracts next bar a lowest(low,shortper) stop;
+		end;
+		
+	Sell next bar at market;
+	Buy to cover next bar at market;
+	

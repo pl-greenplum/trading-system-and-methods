@@ -1,0 +1,26 @@
+[LegacyColorValue = true]; 
+
+{ TSM High-Low Volume Smoothing
+   Show high and low volume levels
+   Copyright 1994-1999, P. J. Kaufman.  All rights reserved. }
+
+  input:  length(70), factor(1.0);
+  vars:   vavg(0), vsd(0), lowlimit(0), uplimit(0), mavg(0), adjvol(0),
+             savevol(0);
+
+{ Find average volume, replacing bad values }
+  adjvol = volume;
+  if volume <> 0 then savevol = volume;
+  if volume = 0 then adjvol = savevol;
+{ Outliers distort both sides of bands }
+  if adjvol > vavg + 2*factor*vsd then adjvol = savevol;
+  vavg = average(adjvol,length);
+  vsd = stddev(adjvol,length);
+
+{ Extreme volume limits }
+  lowlimit = vavg - factor*vsd;
+  uplimit = vavg + 2*factor*vsd;
+
+  plot1(lowlimit,"LowVolume");
+  plot2(uplimit,"HighVolume");
+  plot3(vavg,"AvgVolume");

@@ -1,0 +1,10 @@
+[LegacyColorValue = true]; 
+
+{ TSMAbsVolatility: Volatility as the sum of the absolute price changes
+  Copyright 1998-1999, PJ Kaufman. All rights reserved }
+
+	inputs: length(20);
+	vars:	vlty(0);
+
+	vlty = TSMAbsVolatility(close, length);
+	plot1(vlty,"TSMAVlty");	
