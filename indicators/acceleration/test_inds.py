@@ -27,7 +27,7 @@ if __name__ == "__main__":
     to_date = datetime.datetime(2006, 12, 31)
 
     data = bt.feeds.BacktraderCSVData(
-        dataname="../datas/2006-day-001.txt",
+        dataname="../../datas/2006-day-001.txt",
         fromdate=from_date,
         todate=to_date)
 

@@ -12,7 +12,7 @@ class AdaptiveRsiIndicator(Indicator):
     def __init__(self):
         self.addminperiod(self.p.period+1)
 
-        self.rsi = bt.indicators.RelativeStrengthIndex(self.p.period)
+        self.rsi = bt.indicators.RelativeStrengthIndex(period=self.p.period)
         self.sc = abs(self.rsi / 100 - 0.5) * 2
 
     def next(self):

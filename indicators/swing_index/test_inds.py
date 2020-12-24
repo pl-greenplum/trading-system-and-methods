@@ -2,7 +2,9 @@ from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 
 import backtrader as bt
-from adaptive_rsi_ind import AdaptiveRsiIndicator
+import backtrader.indicators as btind
+from swing_index_ind import SwingIndexIndicator
+
 import datetime
 
 
@@ -12,12 +14,12 @@ class TestStrategy(bt.Strategy):
     )
 
     def __init__(self):
-        self.acc_ind = AdaptiveRsiIndicator(self.data,period = self.p.period)
+        self.swing_ind = SwingIndexIndicator(self.data, period = self.p.period)
         self.sma_ind = bt.indicators.MovingAverageSimple(self.data.close, period = self.p.period)
 
     def next(self):
         print(self.sma_ind[0])
-        print(self.acc_ind[0])
+        print(self.swing_ind[0])
 
 if __name__ == "__main__":
     cerebro = bt.Cerebro()
